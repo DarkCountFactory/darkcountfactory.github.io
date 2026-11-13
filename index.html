@@ -102,7 +102,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .shelf-list { display: grid; gap: 18px; }
 
 /* 商品：米色票据 */
-.goods { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.goods { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; align-items: start; }
 .ticket { position: relative; background: var(--paper); color: var(--ink); border-radius: 4px; padding: 16px 16px 14px; display: grid; gap: 6px; align-content: start; min-width: 0;
   box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 10px 24px rgba(0,0,0,0.35); border: 2px solid transparent; cursor: pointer; }
 .ticket.full { cursor: default; }
@@ -116,7 +116,9 @@ button, input, textarea { font: inherit; color: inherit; }
 .ticket.picked { border-color: var(--maroon); }
 .ticket .no { font-family: var(--font-num); font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; gap: 8px; }
 .ticket .name { font-family: var(--font-display); font-weight: 900; font-size: 18px; line-height: 1.35; overflow-wrap: anywhere; }
-.ticket .desc { color: var(--ink-soft); font-size: 13px; overflow-wrap: anywhere; white-space: pre-line; }
+.ticket .desc { color: var(--ink-soft); font-size: 13px; overflow-wrap: anywhere; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ticket .desc.open { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.ticket .more.on { display: inline-block; }
 .ticket .more { display: none; justify-self: start; background: none; border: 0; padding: 2px 0; color: var(--maroon); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .ticket .tear { border: 0; border-top: 1px dashed var(--ink-soft); opacity: 0.5; margin: 6px 0 2px; }
 .ticket .bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
@@ -688,9 +690,10 @@ button, input, textarea { font: inherit; color: inherit; }
       sec.appendChild(grid);
       // 分类展开时才加载这个分类的样品图，省流量
       const loadPics = () => sec.querySelectorAll("img[data-src]").forEach((im) => { im.src = im.dataset.src; im.removeAttribute("data-src"); });
-      if (sec.open) loadPics(); else sec.addEventListener("toggle", () => { if (sec.open) loadPics(); });
+      if (sec.open) loadPics(); else sec.addEventListener("toggle", () => { if (sec.open) { loadPics(); trimMore(sec); } });
       shelf.appendChild(sec);
     });
+    setTimeout(() => trimMore(shelf), 0);
     $("qn").textContent = words.length ? "找到 " + found + " 件" : "";
     $("qx").hidden = !words.length;
     if (words.length && !found) {
@@ -712,6 +715,14 @@ button, input, textarea { font: inherit; color: inherit; }
 
   // 手机上描述最多显示 3 行；长描述加一个“展开/收起”，点它不会把书加进订单
   const openDesc = new Set();
+  // 简介其实没超过 3 行时，不显示“展开”
+  function trimMore(root) {
+    root.querySelectorAll(".ticket .desc").forEach((d) => {
+      const b = d.nextElementSibling;
+      if (!b || !b.classList.contains("more") || d.classList.contains("open") || !d.clientHeight) return;
+      b.classList.toggle("on", d.scrollHeight > d.clientHeight + 2);
+    });
+  }
   function addMore(descEl, g) {
     const long = g.desc && (g.desc.length > 34 || g.desc.includes("\n"));
     if (!long) return;

@@ -51,6 +51,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .masthead .logo.wide { width: min(460px, 100%); }
 .masthead .logo.stack { width: min(290px, 80%); display: none; }
 .masthead .logo.custom { width: min(280px, 80%); }
+.masthead .logo[hidden] { display: none !important; }
 @media (max-width: 560px) { .masthead .logo.wide { display: none; } .masthead .logo.stack { display: block; } }
 .masthead .tagline { margin: 0; color: var(--cream-muted); text-align: center; max-width: 60ch; }
 .owner-btn { position: absolute; top: 0; right: 0; border: 1px solid var(--line-dark); background: rgba(0,0,0,0.35); color: var(--cream-muted);
@@ -367,16 +368,20 @@ button, input, textarea { font: inherit; color: inherit; }
   .admin input[type="text"], .admin input[type="number"], .admin textarea { font-size: 16px; }
 }
 /* 样品图 */
-.ticket .pic { margin: -4px -4px 4px; border-radius: 3px; overflow: hidden; background: #fff; aspect-ratio: 5 / 4; cursor: zoom-in; position: relative; }
+.ticket .pic { flex: none; width: 84px; border-radius: 3px; overflow: hidden; background: #fff; aspect-ratio: 5 / 4; cursor: zoom-in; position: relative; box-shadow: 0 0 0 1px rgba(36,26,23,.12); }
 .ticket .pic img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.ticket .pic::after { content: "点图放大"; position: absolute; right: 6px; bottom: 6px; background: rgba(36,26,23,.72); color: var(--cream); font-size: 11px; padding: 1px 7px; border-radius: 999px; pointer-events: none; }
+.ticket .pic::after { content: "放大"; position: absolute; right: 2px; bottom: 2px; background: rgba(36,26,23,.72); color: var(--cream); font-size: 10px; line-height: 1.5; padding: 0 5px; border-radius: 999px; pointer-events: none; }
 .lightbox { position: fixed; inset: 0; z-index: 60; background: rgba(8,5,5,.9); display: grid; place-items: center; padding: 48px 16px 24px; cursor: zoom-out; }
 .lightbox[hidden] { display: none !important; }
 .lightbox img { background: #fff; max-width: 100%; max-height: calc(100vh - 80px); max-height: calc(100dvh - 80px); border-radius: 4px; box-shadow: 0 20px 50px rgba(0,0,0,.6); }
 .lightbox .lbx { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); right: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--maroon); color: var(--cream); font-size: 22px; line-height: 1; cursor: pointer; }
 .tbl td.pc { white-space: nowrap; }
 .tbl .gthumb { width: 36px; height: 36px; object-fit: cover; border-radius: 3px; vertical-align: middle; margin-right: 4px; background: #fff; }
-@media (max-width: 600px) { .ticket .pic { margin: -2px -2px 4px 2px; } }
+@media (max-width: 600px) { .ticket .pic { width: 64px; } }
+.ticket .bottom { align-items: flex-end; flex-wrap: nowrap; }
+.ticket .pl { display: grid; gap: 2px; min-width: 0; }
+.ticket .state { font-size: 12px; color: var(--ink-soft); }
+.ticket.picked .state { color: var(--maroon); font-weight: 700; }
 @media (max-width: 340px) { .goods { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: no-preference) { .ticket { transition: border-color .15s, transform .15s; } .ticket:hover { transform: translateY(-2px); } }
 </style>
@@ -408,7 +413,7 @@ button, input, textarea { font: inherit; color: inherit; }
           <span class="qn" id="qn" role="status"></span>
           <button type="button" class="qx" id="qx" aria-label="清空搜索" hidden="">×</button>
         </div>
-        <p class="shelf-hint">点一下商品就加入订单，再点一次多加一件。点分类名可以收起或展开。</p>
+        <p class="shelf-hint">点一下商品加入订单，再点一下取消；点图片可以放大。点分类名可以收起或展开。</p>
         <div class="shelf-list" id="shelf"></div>
       </section>
 
@@ -708,6 +713,14 @@ button, input, textarea { font: inherit; color: inherit; }
     renderSlip();
   }
 
+  // 每件商品每单只能买一份：点一下加入，再点一下取消
+  function toggleOne(g) {
+    if ((cart[g.id] || 0) > 0) {
+      cart[g.id] = 0; renderShop();
+      const again = document.querySelector('[data-gid="' + g.id + '"]');
+      if (again) again.focus({ preventScroll: true });
+    } else addOne(g);
+  }
   function addOne(g) {
     const q = Math.min(cart[g.id] || 0, capOf(g));
     if (q >= capOf(g)) { flash("“" + g.name + "”每单最多 " + g.max + " 件"); return; }
@@ -751,7 +764,7 @@ button, input, textarea { font: inherit; color: inherit; }
     const open = (e) => { e.stopPropagation(); openPic(imgUrl(g.imgFull || g.img), g.name); };
     p.addEventListener("click", open);
     p.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(e); } else e.stopPropagation(); });
-    card.insertBefore(p, card.firstChild);
+    card.querySelector(".bottom").appendChild(p);
   }
   function openPic(src, name) {
     let lb = $("lightbox");
@@ -784,14 +797,15 @@ button, input, textarea { font: inherit; color: inherit; }
     }
     const q = Math.min(cart[g.id] || 0, capOf(g));
     const card = document.createElement("article");
-    card.className = "ticket" + (q ? " picked" : "") + (q >= capOf(g) ? " full" : "");
+    card.className = "ticket" + (q ? " picked" : "");
     card.tabIndex = 0;
     card.dataset.gid = g.id;
     card.setAttribute("role", "button");
-    card.setAttribute("aria-label", "加入 " + g.name + "，" + yuan(g.price) + (q ? "，已选 " + q + " 件" : ""));
-    card.addEventListener("click", (e) => { if (e.target.closest(".stepper")) return; addOne(g); });
-    card.addEventListener("keydown", (e) => { if (e.target === card && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); addOne(g); } });
-    card.innerHTML = '<div class="no"><span class="id"></span><span class="cat"></span></div><div class="name"></div><div class="desc"></div><hr class="tear"><div class="bottom"><span class="price"></span><span class="stepper"><button type="button" class="minus">−</button><output></output><button type="button" class="plus">+</button></span></div><div class="limit"></div>';
+    card.setAttribute("aria-pressed", q ? "true" : "false");
+    card.setAttribute("aria-label", (q ? "已加入 " : "加入 ") + g.name + "，" + yuan(g.price) + (q ? "，再点一下取消" : ""));
+    card.addEventListener("click", () => toggleOne(g));
+    card.addEventListener("keydown", (e) => { if (e.target === card && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggleOne(g); } });
+    card.innerHTML = '<div class="no"><span class="id"></span><span class="cat"></span></div><div class="name"></div><div class="desc"></div><hr class="tear"><div class="bottom"><div class="pl"><span class="price"></span><span class="state"></span></div></div>';
     card.querySelector(".id").textContent = g.code || "No." + String(g.id).padStart(3, "0");
     card.querySelector(".cat").textContent = g.cat;
     card.querySelector(".name").textContent = g.name;
@@ -799,17 +813,8 @@ button, input, textarea { font: inherit; color: inherit; }
     desc.textContent = g.desc || ""; desc.hidden = !g.desc;
     addMore(desc, g);
     card.querySelector(".price").textContent = yuan(g.price);
-    card.querySelector("output").textContent = q;
-    if (q) { const s = document.createElement("span"); s.className = "seal"; s.textContent = "×" + q; s.setAttribute("aria-hidden", "true"); card.appendChild(s); }
-    const minus = card.querySelector(".minus"), plus = card.querySelector(".plus");
-    minus.setAttribute("aria-label", "减少 " + g.name); plus.setAttribute("aria-label", "增加 " + g.name);
-    minus.disabled = q <= 0;
-    plus.disabled = q >= capOf(g);
-    const lim = card.querySelector(".limit");
-    if (g.max > 0) { lim.textContent = q >= g.max ? "已达每单上限 " + g.max + " 件" : "每单限购 " + g.max + " 件"; lim.classList.toggle("hit", q >= g.max); }
-    else lim.textContent = "不限购";
-    minus.onclick = (e) => { e.stopPropagation(); cart[g.id] = Math.max(0, q - 1); renderShop(); };
-    plus.onclick = (e) => { e.stopPropagation(); addOne(g); };
+    card.querySelector(".state").textContent = q ? "✓ 已加入 · 再点取消" : "点一下加入";
+    if (q) { const s = document.createElement("span"); s.className = "seal"; s.textContent = "✓"; s.setAttribute("aria-hidden", "true"); card.appendChild(s); }
     addPic(card, g);
     return card;
   }

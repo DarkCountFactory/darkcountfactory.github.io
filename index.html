@@ -439,7 +439,7 @@ button, input, textarea { font: inherit; color: inherit; }
           <div class="toast" id="toast" role="status"></div>
           <div class="imgout" id="imgOut" hidden="">
             <img id="orderImg" alt="订单图片">
-            <p id="imgTip">长按图片可以保存或直接发给店主；电脑上可以右键“复制图片”。</p>
+            <p id="imgTip">复制图片或截图给厂长</p>
           </div>
           <textarea id="orderText" readonly="" hidden="" aria-label="订单文字"></textarea>
         </div>
@@ -1057,7 +1057,7 @@ button, input, textarea { font: inherit; color: inherit; }
       }
     } catch (e) { clip = null; }
     blobP.then((b) => show(b).then(() => true, () => false)).then((shown) => {
-      const done = () => flash(copied ? "订单图片已复制，直接粘贴发给店主即可" : shown ? "长按下面的图片保存或发送给店主" : "图片生成失败，请点“复制文字”");
+      const done = () => flash(copied ? "订单图片已复制，直接粘贴给厂长即可" : shown ? "复制图片或截图给厂长" : "图片生成失败，请点“复制文字”");
       if (clip) clip.then(done, done); else done();
     }, () => flash("图片生成失败，请点“复制文字”"));
   });

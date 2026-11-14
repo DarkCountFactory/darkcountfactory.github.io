@@ -1038,22 +1038,26 @@ button, input, textarea { font: inherit; color: inherit; }
     $("orderText").hidden = true;
     const blobP = renderOrderImage();
     let copied = false;
-    const show = (b) => {
-      const url = URL.createObjectURL(b);
-      const img = $("orderImg");
-      if (img.dataset.url) URL.revokeObjectURL(img.dataset.url);
-      img.src = url; img.dataset.url = url;
-      $("imgOut").hidden = false;
-    };
+    // 用 data: 地址显示：有些页面环境不允许显示 blob: 图片，会只剩一行替代文字
+    const show = (b) => new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => {
+        const img = $("orderImg");
+        img.onload = () => { $("imgOut").hidden = false; res(); };
+        img.onerror = () => { $("imgOut").hidden = true; rej(new Error("img")); };
+        img.src = fr.result;
+      };
+      fr.onerror = () => rej(new Error("read"));
+      fr.readAsDataURL(b);
+    });
     let clip = null;
     try {
       if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
         clip = navigator.clipboard.write([new ClipboardItem({ "image/png": blobP })]).then(() => { copied = true; });
       }
     } catch (e) { clip = null; }
-    blobP.then((b) => {
-      show(b);
-      const done = () => flash(copied ? "订单图片已复制，直接粘贴发给店主即可" : "长按下面的图片保存或发送给店主");
+    blobP.then((b) => show(b).then(() => true, () => false)).then((shown) => {
+      const done = () => flash(copied ? "订单图片已复制，直接粘贴发给店主即可" : shown ? "长按下面的图片保存或发送给店主" : "图片生成失败，请点“复制文字”");
       if (clip) clip.then(done, done); else done();
     }, () => flash("图片生成失败，请点“复制文字”"));
   });

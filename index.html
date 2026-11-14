@@ -813,7 +813,7 @@ button, input, textarea { font: inherit; color: inherit; }
     desc.textContent = g.desc || ""; desc.hidden = !g.desc;
     addMore(desc, g);
     card.querySelector(".price").textContent = yuan(g.price);
-    card.querySelector(".state").textContent = q ? "✓ 已加入 · 再点取消" : "点一下加入";
+    const st = card.querySelector(".state"); st.textContent = q ? "✓ 已加入 · 再点取消" : ""; st.hidden = !q;
     if (q) { const s = document.createElement("span"); s.className = "seal"; s.textContent = "✓"; s.setAttribute("aria-hidden", "true"); card.appendChild(s); }
     addPic(card, g);
     return card;

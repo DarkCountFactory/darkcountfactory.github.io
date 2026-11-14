@@ -51,7 +51,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .masthead .logo.wide { width: min(460px, 100%); }
 .masthead .logo.stack { width: min(290px, 80%); display: none; }
 .masthead .logo.custom { width: min(280px, 80%); }
-.masthead .logo[hidden] { display: none !important; }
+[hidden] { display: none !important; } /* 页面里 hidden 的东西一律不显示，不被各自的 display 样式顶掉 */
 @media (max-width: 560px) { .masthead .logo.wide { display: none; } .masthead .logo.stack { display: block; } }
 .masthead .tagline { margin: 0; color: var(--cream-muted); text-align: center; max-width: 60ch; }
 .owner-btn { position: absolute; top: 0; right: 0; border: 1px solid var(--line-dark); background: rgba(0,0,0,0.35); color: var(--cream-muted);

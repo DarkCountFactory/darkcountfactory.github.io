@@ -7,8 +7,6 @@
 <title>暗数工厂</title>
 <style></style>
 <style id="page-style">
-/* 版式：店招居中（logo 贴纸）→ 分类标签 → 左侧“票据”式商品，右侧一卷收银小票；窄屏单栏。
-   单一深色设计：暖黑底；取 logo 的旧纸米色、深酒红、墨黑。 */
 :root {
   --bg: #120d0c;
   --bg-2: #1c1514;
@@ -43,42 +41,24 @@ body {
 button, input, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--maroon-hi); outline-offset: 2px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-/* ---------- 店招 ---------- */
 .masthead { position: relative; display: grid; justify-items: center; gap: 10px; padding-top: 8px; }
 .masthead .logos { width: 100%; display: grid; justify-items: center; }
 .masthead .logo { display: block; height: auto; filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.55)); }
 .masthead .logo.wide { width: min(460px, 100%); }
 .masthead .logo.stack { width: min(290px, 80%); display: none; }
 .masthead .logo.custom { width: min(280px, 80%); }
-[hidden] { display: none !important; } /* 页面里 hidden 的东西一律不显示，不被各自的 display 样式顶掉 */
+[hidden] { display: none !important; } 
 @media (max-width: 560px) { .masthead .logo.wide { display: none; } .masthead .logo.stack { display: block; } }
 .masthead .tagline { margin: 0; color: var(--cream-muted); text-align: center; max-width: 60ch; }
-.owner-btn { position: absolute; top: 0; right: 0; border: 1px solid var(--line-dark); background: rgba(0,0,0,0.35); color: var(--cream-muted);
-  border-radius: 999px; padding: 5px 14px; font-size: 13px; cursor: pointer; }
-.owner-btn:hover { color: var(--cream); border-color: var(--brass); }
-
-/* 优惠：酒红绸带 */
 .ribbons { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .ribbon { background: var(--maroon); color: var(--cream); font-weight: 500; font-size: 14px; letter-spacing: 0.04em;
   padding: 6px 22px; clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%, 10px 50%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.12); }
-
 .notice { border: 1px dashed var(--brass); color: var(--brass); border-radius: 8px; padding: 10px 14px; font-size: 14px; text-align: center; }
-
-/* ---------- 布局 ---------- */
 .main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 28px; align-items: start; }
 @media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
 .shelf { min-width: 0; display: grid; gap: 18px; }
-
-/* 分类标签 */
-.tabs { display: flex; gap: 8px; flex-wrap: wrap; }
-.tab { border: 1px solid var(--line-dark); background: var(--bg-2); color: var(--cream-muted); border-radius: 999px; padding: 6px 16px; cursor: pointer; font-size: 14px; }
-.tab:hover { color: var(--cream); border-color: var(--cream-muted); }
-.tab[aria-pressed="true"] { background: var(--cream); color: var(--ink); border-color: var(--cream); font-weight: 500; }
 .tab .n { font-family: var(--font-num); font-size: 12px; opacity: 0.7; margin-left: 4px; }
-
-/* 分类：可收起 */
 .shelf-hint { margin: 0; font-size: 13px; color: var(--cream-muted); }
 .search { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 5; display: flex; align-items: center; gap: 10px; background: var(--bg-2); border: 1px solid var(--line-dark); border-radius: 999px; padding: 6px 8px 6px 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.35); }
 .search:focus-within { border-color: var(--maroon-hi); }
@@ -101,8 +81,6 @@ button, input, textarea { font: inherit; color: inherit; }
 .cat-sec > summary:hover .nm { color: #fff; }
 .cat-sec > .goods { padding-top: 10px; }
 .shelf-list { display: grid; gap: 18px; }
-
-/* 商品：米色票据 */
 .goods { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; align-items: stretch; }
 .ticket { position: relative; background: var(--paper); color: var(--ink); border-radius: 4px; padding: 16px 16px 14px; display: grid; gap: 6px; align-content: start; min-width: 0;
   box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 10px 24px rgba(0,0,0,0.35); border: 2px solid transparent; cursor: pointer; }
@@ -112,7 +90,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .na-tag { display: inline-block; border: 1px dashed var(--ink-soft); color: var(--ink-soft); border-radius: 999px; padding: 2px 12px; font-size: 13px; letter-spacing: 0.08em; }
 .ticket:hover:not(.full) { border-color: rgba(142, 27, 32, 0.45); }
 .ticket .stepper, .ticket .stepper * { cursor: pointer; }
-.ticket::before { /* 左侧打孔 */
+.ticket::before { 
   content: ""; position: absolute; left: -2px; top: 50%; width: 10px; height: 20px; margin-top: -10px; background: var(--bg); border-radius: 0 10px 10px 0; }
 .ticket.picked { border-color: var(--maroon); }
 .ticket .no { font-family: var(--font-num); font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; gap: 8px; }
@@ -129,14 +107,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .seal { position: absolute; top: -10px; right: -8px; width: 38px; height: 38px; border-radius: 50%; background: var(--maroon); color: var(--cream);
   display: grid; place-items: center; font-family: var(--font-num); font-weight: 700; font-size: 14px;
   box-shadow: inset 0 0 0 3px var(--maroon), inset 0 0 0 4px rgba(239,229,209,0.55), 0 4px 10px rgba(0,0,0,0.35); }
-.stepper { display: inline-flex; align-items: center; background: var(--ink); border-radius: 999px; padding: 3px; }
-.stepper button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: var(--cream); cursor: pointer; font-size: 18px; line-height: 1; }
-.stepper button:hover:not(:disabled) { background: var(--maroon); }
-.stepper button:disabled { opacity: 0.3; cursor: not-allowed; }
-.stepper output { min-width: 28px; text-align: center; color: var(--cream); font-family: var(--font-num); font-weight: 700; }
 .empty { color: var(--cream-muted); padding: 24px 0; text-align: center; }
-
-/* ---------- 收银小票 ---------- */
 .receipt { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
 @media (max-width: 900px) { .receipt { position: static; } }
 .slip { position: relative; background: var(--paper); color: var(--ink); padding: 22px 20px 26px; display: grid; gap: 12px; font-variant-numeric: tabular-nums;
@@ -224,8 +195,6 @@ button, input, textarea { font: inherit; color: inherit; }
 .slip .actions .btn.ghost { padding: 9px 12px; }
 .toast { font-size: 13px; min-height: 1.2em; text-align: center; color: var(--maroon); font-weight: 500; }
 #orderText { font-family: var(--font-num); font-size: 12px; min-height: 160px; }
-
-/* 付款方式 */
 .paybox { margin-top: 18px; background: var(--bg-2); border: 1px solid var(--line-dark); border-radius: 6px; padding: 16px; display: grid; gap: 12px; }
 .paybox h2 { margin: 0; font-family: var(--font-display); font-size: 17px; letter-spacing: 0.12em; }
 .paybox .methods { display: flex; gap: 8px; }
@@ -253,64 +222,17 @@ button, input, textarea { font: inherit; color: inherit; }
 .qr .tip { font-size: 13px; color: var(--ink-soft); text-align: center; }
 .paybox .after { font-size: 13px; color: var(--cream-muted); margin: 0; line-height: 1.6; }
 .paybox .after b { color: var(--cream); }
-.pay-edit { display: flex; gap: 16px; flex-wrap: wrap; }
-.pay-slot { display: grid; gap: 8px; justify-items: start; background: var(--bg); border: 1px solid var(--line-dark); border-radius: 6px; padding: 12px; min-width: 180px; }
-.pay-slot .lbl { font-weight: 500; display: inline-flex; gap: 6px; align-items: center; }
-.pay-slot img { width: 120px; height: 120px; object-fit: contain; background: #fff; border-radius: 4px; }
-.pay-slot .ph { width: 120px; height: 120px; border: 1px dashed var(--line-dark); border-radius: 4px; display: grid; place-items: center; font-size: 12px; color: var(--cream-muted); }
 .pay-slot .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-#qrWechatFile:focus-visible + .upload, #qrAlipayFile:focus-visible + .upload { outline: 2px solid var(--maroon-hi); outline-offset: 2px; }
-
-/* ---------- 店主管理 ---------- */
-.admin { background: var(--bg-2); border: 1px solid var(--line-dark); border-top: 4px solid var(--maroon); border-radius: 6px; padding: 18px; display: grid; gap: 20px; }
-.admin h2 { font-family: var(--font-display); margin: 0; font-size: 20px; letter-spacing: 0.12em; }
-.admin h3 { margin: 0; font-size: 15px; color: var(--cream); }
 .admin .group { display: grid; gap: 10px; }
-.admin .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .admin label.f { display: grid; gap: 4px; font-size: 13px; color: var(--cream-muted); min-width: 0; }
-.admin input[type="text"], .admin input[type="number"], .admin textarea { background: var(--bg); border: 1px solid var(--line-dark); border-radius: 4px; padding: 7px 9px; width: 100%; min-width: 0; }
-.admin input:focus, .admin textarea:focus { border-color: var(--maroon-hi); outline: none; }
-.admin input[type="number"] { font-family: var(--font-num); }
-.admin .hint { font-size: 12px; color: var(--cream-muted); margin: 0; }
-.acats { display: grid; gap: 10px; }
-.acat { border: 1px solid var(--line-dark); border-radius: 6px; background: var(--bg); }
-.acat-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; flex-wrap: wrap; }
-.acat-head .tog { width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--maroon); color: var(--cream); cursor: pointer; font-size: 11px; flex: 0 0 auto; }
-.acat-head .tog[aria-expanded="true"] span { display: inline-block; transform: rotate(90deg); }
-.acat-head input.cname { flex: 1 1 160px; max-width: 280px; font-family: var(--font-display); font-weight: 700; }
 .acat-head .cnt { font-size: 13px; color: var(--cream-muted); }
-.acat-head .spacer { flex: 1; }
-.acat-head .fold { font-size: 13px; color: var(--cream-muted); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
-.acat-head .fold input { accent-color: var(--maroon); width: 16px; height: 16px; }
-.mini { border: 1px solid var(--line-dark); background: var(--bg-2); color: var(--cream); border-radius: 4px; min-width: 30px; height: 30px; cursor: pointer; padding: 0 8px; font-size: 13px; }
-.mini:hover:not(:disabled) { border-color: var(--cream-muted); }
-.mini:disabled { opacity: 0.3; cursor: not-allowed; }
-.mini.danger { color: var(--maroon-hi); }
-.acat-body { padding: 0 10px 10px; display: grid; gap: 8px; }
-.acat-body .none { font-size: 13px; color: var(--cream-muted); padding: 6px 0; }
-.admin select { background: var(--bg-2); border: 1px solid var(--line-dark); border-radius: 4px; padding: 6px 8px; color: var(--cream); max-width: 150px; }
 .tbl td.o { white-space: nowrap; }
-.tbl-wrap { overflow-x: auto; }
-.tbl { width: 100%; border-collapse: collapse; min-width: 880px; font-size: 14px; }
-.tbl th { text-align: left; font-weight: 500; color: var(--cream-muted); font-size: 12px; padding: 4px 6px; }
-.tbl td { padding: 5px 6px; border-top: 1px solid var(--line-dark); vertical-align: top; }
 .tbl td.n input { width: 96px; }
 .tbl td.c input { width: 120px; }
-.linkbtn { background: none; border: 0; color: var(--maroon-hi); cursor: pointer; text-decoration: underline; padding: 6px 4px; }
-.promo-edit { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--cream-muted); font-size: 14px; }
-.promo-edit input[type="number"] { width: 90px; }
-.promo-edit input[type="checkbox"] { accent-color: var(--maroon); width: 18px; height: 18px; }
-.logo-edit { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.logo-edit img { width: 72px; height: 48px; object-fit: contain; }
-.upload { border: 1px solid var(--cream-muted); color: var(--cream); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-size: 14px; }
-.vh { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-#logoFile:focus-visible + .upload { outline: 2px solid var(--maroon-hi); outline-offset: 2px; }
-.admin-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; position: sticky; bottom: 0; background: var(--bg-2); padding-block: 10px 2px; border-top: 1px solid var(--line-dark); }
 .admin-bar .status { font-size: 13px; color: var(--cream-muted); flex: 1 1 200px; }
 .admin-bar .status.dirty { color: var(--brass); }
 .btn.quiet { background: transparent; color: var(--cream); box-shadow: inset 0 0 0 1px var(--line-dark); font-weight: 500; letter-spacing: 0.04em; }
 .btn.quiet:hover { box-shadow: inset 0 0 0 1px var(--cream-muted); }
-/* ---------- 手机底部结算栏 ---------- */
 .mbar { display: none; }
 @media (max-width: 900px) {
   .mbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; align-items: center; gap: 12px;
@@ -325,14 +247,11 @@ button, input, textarea { font: inherit; color: inherit; }
   body.has-bar { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
   .search { position: sticky; }
 }
-
-/* ---------- 手机排版 ---------- */
 @media (max-width: 600px) {
   body { font-size: 14px; padding-block: 12px 40px; }
   .wrap { gap: 18px; }
   .masthead { padding-top: 0; gap: 8px; }
   .masthead .logo.stack { width: min(240px, 70%); }
-  .owner-btn { position: static; }
   .ribbon { font-size: 13px; padding: 5px 18px; }
   .shelf { gap: 12px; }
   .shelf-hint { font-size: 12px; }
@@ -354,9 +273,6 @@ button, input, textarea { font: inherit; color: inherit; }
   .ticket .bottom { gap: 6px; }
   .ticket .price { font-size: 17px; }
   .ticket .limit { font-size: 11px; }
-  .stepper { padding: 2px; }
-  .stepper button { width: 30px; height: 30px; font-size: 17px; }
-  .stepper output { min-width: 18px; }
   .seal { top: 6px; right: 6px; width: 30px; height: 30px; font-size: 12px; }
   .na-tag { font-size: 12px; padding: 2px 10px; }
   .slip { padding: 18px 16px 22px; }
@@ -364,10 +280,7 @@ button, input, textarea { font: inherit; color: inherit; }
   .slip .total .v { font-size: 28px; }
   .paybox { padding: 14px; }
   .method { padding: 8px 6px; font-size: 14px; }
-  .admin { padding: 14px; }
-  .admin input[type="text"], .admin input[type="number"], .admin textarea { font-size: 16px; }
 }
-/* 样品图 */
 .ticket .pic { flex: none; width: 84px; border-radius: 3px; overflow: hidden; background: #fff; aspect-ratio: 5 / 4; cursor: zoom-in; position: relative; box-shadow: 0 0 0 1px rgba(36,26,23,.12); }
 .ticket .pic img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .ticket .pic::after { content: attr(data-n); position: absolute; right: 2px; bottom: 2px; background: rgba(36,26,23,.72); color: var(--cream); font-size: 10px; line-height: 1.5; padding: 0 5px; border-radius: 999px; pointer-events: none; }
@@ -379,8 +292,6 @@ button, input, textarea { font: inherit; color: inherit; }
 .lightbox .lbn:hover { background: var(--maroon); }
 .lightbox .lbc { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); left: 50%; transform: translateX(-50%); background: rgba(36,26,23,.75); color: var(--cream); font-family: var(--font-num); font-size: 13px; padding: 2px 12px; border-radius: 999px; }
 .lightbox .lbx { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); right: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--maroon); color: var(--cream); font-size: 22px; line-height: 1; cursor: pointer; }
-.tbl td.pc { white-space: nowrap; }
-.tbl .gthumb { width: 36px; height: 36px; object-fit: cover; border-radius: 3px; vertical-align: middle; margin-right: 4px; background: #fff; }
 @media (max-width: 600px) { .ticket .pic { width: 64px; } }
 .ticket .bottom { align-items: flex-end; flex-wrap: nowrap; }
 .ticket .pl { display: grid; gap: 2px; min-width: 0; }
@@ -500,7 +411,6 @@ button, input, textarea { font: inherit; color: inherit; }
 (function () {
   const $ = (id) => document.getElementById(id);
 
-  // 发布时要用到的原始页面片段，必须在任何渲染之前取下来
   const SKELETON_RESET = (document.head && document.head.querySelector("style") ? document.head.querySelector("style").textContent : "");
   const APP_HTML = $("app").innerHTML;
   const STYLE_HTML = $("page-style").outerHTML;
@@ -516,12 +426,9 @@ button, input, textarea { font: inherit; color: inherit; }
   let artifactApi = null;
   const cart = {};
   let query = "";               // 顾客的搜索词（小写）
-  // ---------- 满赠选书 ----------
   let giftSel = [];                // 顾客选的赠品 id
   let giftShownTier = 0, giftReturn = null, gMode = "A", gTemp = [];
   function giftCfg() { draft.promo.gift = draft.promo.gift || {}; return draft.promo.gift; }
-  // 每满 step 元，送 cheapMax 元赠书额度（可累加）；giftTier 返回额度（分）
-  // 活动截止：c.endDate = "YYYY-MM-DD"，表示北京时间当天 24:00 结束
   function giftEndMs(c) { return c.endDate ? Date.parse(c.endDate + "T00:00:00+08:00") + 86400000 : 0; }
   function giftActive() { const c = giftCfg(); if (!c.on || !c.step || !c.cheapMax) return false; const e = giftEndMs(c); return !e || Date.now() < e; }
   function giftEndText(c) {
@@ -532,7 +439,6 @@ button, input, textarea { font: inherit; color: inherit; }
   }
   function giftTier(sub) { const c = giftCfg(); if (!giftActive()) return 0; return Math.floor(sub / c.step) * c.cheapMax; }
   const isBundle = (g) => !!g.bundle || /整套打包/.test(g.name);
-  // 已经在订单里的书，或者订单里的系列/打包已经包含的单本，都不能再选做赠品
   const inOrder = (g) => !!cart[g.id] || draft.goods.some((b) => cart[b.id] && b.id !== g.id && isBundle(b) && b.cat === g.cat && (b.desc || "").includes(g.name));
   const giftable = (g, credit) => g && !g.na && !isBundle(g) && !inOrder(g) && g.price > 0 && g.price <= credit;
   function giftPool(credit) { return draft.goods.filter((g) => giftable(g, credit)); }
@@ -603,7 +509,6 @@ button, input, textarea { font: inherit; color: inherit; }
   const shopToggled = new Map();     // 顾客本次手动展开/收起的分类（只在本次浏览有效）
   const adminCollapsed = new Set();  // 店主管理里收起的分类
 
-  // 分类：data.cats 是有序的分类名单；每个商品的 cat 必须在名单里
   function normalize(d) {
     d.goods = Array.isArray(d.goods) ? d.goods : [];
     d.promo = d.promo || {};
@@ -652,7 +557,6 @@ button, input, textarea { font: inherit; color: inherit; }
     return { lines, sub, count, adj, discount: sub - amt, total: amt, gt, gifts };
   }
 
-  // ---------- 顾客视图 ----------
   function renderShop() {
     $("shopName").textContent = draft.shop || "暗数工厂";
     $("tagline").textContent = draft.tagline || "";
@@ -675,7 +579,6 @@ button, input, textarea { font: inherit; color: inherit; }
     tags.forEach((t) => { const s = document.createElement("span"); s.className = "ribbon"; s.textContent = t; promo.appendChild(s); });
     promo.hidden = !tags.length;
 
-    // 按分类分组，每组可收起
     const shelf = $("shelf");
     shelf.innerHTML = "";
     if (!draft.goods.length) { shelf.innerHTML = '<div class="empty">暂时没有上架的商品</div>'; }
@@ -701,7 +604,6 @@ button, input, textarea { font: inherit; color: inherit; }
       grid.className = "goods";
       list.forEach((g) => grid.appendChild(ticket(g)));
       sec.appendChild(grid);
-      // 分类展开时才加载这个分类的样品图，省流量
       const loadPics = () => sec.querySelectorAll("img[data-src]").forEach((im) => { im.src = im.dataset.src; im.removeAttribute("data-src"); });
       if (sec.open) loadPics(); else sec.addEventListener("toggle", () => { if (sec.open) { loadPics(); trimMore(sec); } });
       shelf.appendChild(sec);
@@ -717,7 +619,6 @@ button, input, textarea { font: inherit; color: inherit; }
     renderSlip();
   }
 
-  // 每件商品每单只能买一份：点一下加入，再点一下取消
   function toggleOne(g) {
     if ((cart[g.id] || 0) > 0) {
       cart[g.id] = 0; renderShop();
@@ -734,9 +635,7 @@ button, input, textarea { font: inherit; color: inherit; }
     if (again) again.focus({ preventScroll: true });
   }
 
-  // 手机上描述最多显示 3 行；长描述加一个“展开/收起”，点它不会把书加进订单
   const openDesc = new Set();
-  // 简介其实没超过 3 行时，不显示“展开”
   function trimMore(root) {
     root.querySelectorAll(".ticket .desc").forEach((d) => {
       const b = d.nextElementSibling;
@@ -755,7 +654,6 @@ button, input, textarea { font: inherit; color: inherit; }
     sync();
     descEl.after(b);
   }
-  // 样品图：店主页用页面自带的图片库地址；导出的顾客页用 img/ 文件夹
   function imgUrl(id) { return draft.imgDir ? draft.imgDir + encodeURIComponent(id) + ".webp" : "/_blob/" + id; }
   function addPic(card, g) {
     if (!g.img) return;
@@ -773,7 +671,6 @@ button, input, textarea { font: inherit; color: inherit; }
     p.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(e); } else e.stopPropagation(); });
     card.querySelector(".bottom").appendChild(p);
   }
-  // 样品图大图：一件商品可以有多张，左右切换（按钮、方向键、手机左右滑）
   let lbList = [], lbIdx = 0, lbName = "";
   function showPic(i) {
     const lb = $("lightbox"), n = lbList.length;
@@ -903,7 +800,6 @@ button, input, textarea { font: inherit; color: inherit; }
     renderPay(r);
   }
 
-  // 付款方式：店主上传了哪个收款码就显示哪个
   let payMethod = "";
   const PAY = { wechat: { name: "微信赞赏", app: "微信", key: "qrWechat", btn: "mWechat" }, alipay: { name: "支付宝", app: "支付宝", key: "qrAlipay", btn: "mAlipay" }, qq: { name: "QQ 转账", app: "QQ", key: "qqOn", btn: "mQQ" } };
   function renderPay(r) {
@@ -936,7 +832,6 @@ button, input, textarea { font: inherit; color: inherit; }
     }
   }
   Object.keys(PAY).forEach((m) => $(PAY[m].btn).addEventListener("click", () => { payMethod = m; renderPay(calc()); }));
-  // 复制 QQ 号：先用系统剪贴板，不行再用老办法（微信 / QQ 内置浏览器里更稳）
   function copyQQ() {
     const no = ((draft.pay || {}).qqNo || "").trim();
     if (!no) return;
@@ -986,7 +881,6 @@ button, input, textarea { font: inherit; color: inherit; }
   let tt;
   function flash(msg) { $("toast").textContent = msg; clearTimeout(tt); tt = setTimeout(() => ($("toast").textContent = ""), 3500); }
 
-  // ---------- 订单图片 ----------
   const FONT_D = '"Noto Serif SC", "Songti SC", serif', FONT_B = '"Noto Sans SC", "PingFang SC", sans-serif', FONT_N = '"Courier Prime", "Courier New", monospace';
   function wrapLines(ctx, text, maxW) {
     const out = []; let line = "";
@@ -997,7 +891,6 @@ button, input, textarea { font: inherit; color: inherit; }
     return out;
   }
   function paintOrder(ctx, r, W) {
-    // 返回总高度；ctx 为 null 时只量尺寸
     const m = ctx || document.createElement("canvas").getContext("2d");
     const P = 40, X0 = 28, X1 = W - 28, L = X0 + P - 12, R = X1 - P + 12;
     let y = 0;
@@ -1043,9 +936,7 @@ button, input, textarea { font: inherit; color: inherit; }
     y += 24;
     const bottom = y;
     if (ctx) {
-      // 纸张（画在文字下面）
       ctx.save(); ctx.globalCompositeOperation = "destination-over";
-      // destination-over：先画最上层，再画下面的层
       ctx.fillStyle = C.maroon; ctx.fillRect(X0, top, X1 - X0, 8);
       ctx.fillStyle = C.paper; ctx.fillRect(X0, top, X1 - X0, bottom - top);
       ctx.beginPath(); for (let x = X0; x < X1; x += 14) { ctx.moveTo(x, bottom - 1); ctx.lineTo(Math.min(x + 7, X1), bottom + 10); ctx.lineTo(Math.min(x + 14, X1), bottom - 1); } ctx.closePath(); ctx.fill();
@@ -1061,7 +952,6 @@ button, input, textarea { font: inherit; color: inherit; }
     const cv = document.createElement("canvas");
     cv.width = W * S; cv.height = H * S;
     const ctx = cv.getContext("2d"); ctx.scale(S, S);
-    // 先画底色以确定 canvas 高度（逻辑像素）
     Object.defineProperty(ctx, "canvas", { value: { height: H }, configurable: true });
     paintOrder(ctx, r, W);
     return new Promise((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error("toBlob"))), "image/png"));
@@ -1071,7 +961,6 @@ button, input, textarea { font: inherit; color: inherit; }
     $("orderText").hidden = true;
     const blobP = renderOrderImage();
     let copied = false;
-    // 用 data: 地址显示：有些页面环境不允许显示 blob: 图片，会只剩一行替代文字
     const show = (b) => new Promise((res, rej) => {
       const fr = new FileReader();
       fr.onload = () => {
@@ -1114,7 +1003,6 @@ button, input, textarea { font: inherit; color: inherit; }
     const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     slip.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
   });
-  // 小票或付款区出现在屏幕上时，隐藏底部结算栏
   let slipTick = false;
   function checkSlip() {
     slipTick = false;

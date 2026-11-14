@@ -5,7 +5,391 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="format-detection" content="telephone=no">
 <title>暗数工厂</title>
-<style></style>
+<style>
+/* 版式：店招居中（logo 贴纸）→ 分类标签 → 左侧“票据”式商品，右侧一卷收银小票；窄屏单栏。
+   单一深色设计：暖黑底；取 logo 的旧纸米色、深酒红、墨黑。 */
+:root {
+  --bg: #120d0c;
+  --bg-2: #1c1514;
+  --line-dark: #332825;
+  --cream: #efe5d1;
+  --cream-muted: #a99886;
+  --paper: #f1e7d3;
+  --paper-2: #e3d4b8;
+  --ink: #241a17;
+  --ink-soft: #6f5e52;
+  --maroon: #8e1b20;
+  --maroon-deep: #681216;
+  --maroon-hi: #d0525a;
+  --brass: #b8925a;
+  --font-display: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-num: "Courier Prime", "Courier New", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background:
+    radial-gradient(1200px 520px at 50% -120px, rgba(142, 27, 32, 0.42), transparent 70%),
+    var(--bg);
+  color: var(--cream); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 64px;
+  min-height: 100%;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 28px; }
+button, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--maroon-hi); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- 店招 ---------- */
+.masthead { position: relative; display: grid; justify-items: center; gap: 10px; padding-top: 8px; }
+.masthead .logos { width: 100%; display: grid; justify-items: center; }
+.masthead .logo { display: block; height: auto; filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.55)); }
+.masthead .logo.wide { width: min(460px, 100%); }
+.masthead .logo.stack { width: min(290px, 80%); display: none; }
+.masthead .logo.custom { width: min(280px, 80%); }
+[hidden] { display: none !important; } /* 页面里 hidden 的东西一律不显示，不被各自的 display 样式顶掉 */
+@media (max-width: 560px) { .masthead .logo.wide { display: none; } .masthead .logo.stack { display: block; } }
+.masthead .tagline { margin: 0; color: var(--cream-muted); text-align: center; max-width: 60ch; }
+.owner-btn { position: absolute; top: 0; right: 0; border: 1px solid var(--line-dark); background: rgba(0,0,0,0.35); color: var(--cream-muted);
+  border-radius: 999px; padding: 5px 14px; font-size: 13px; cursor: pointer; }
+.owner-btn:hover { color: var(--cream); border-color: var(--brass); }
+
+/* 优惠：酒红绸带 */
+.ribbons { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.ribbon { background: var(--maroon); color: var(--cream); font-weight: 500; font-size: 14px; letter-spacing: 0.04em;
+  padding: 6px 22px; clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%, 10px 50%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12); }
+
+.notice { border: 1px dashed var(--brass); color: var(--brass); border-radius: 8px; padding: 10px 14px; font-size: 14px; text-align: center; }
+
+/* ---------- 布局 ---------- */
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 28px; align-items: start; }
+@media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.shelf { min-width: 0; display: grid; gap: 18px; }
+
+/* 分类标签 */
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.tab { border: 1px solid var(--line-dark); background: var(--bg-2); color: var(--cream-muted); border-radius: 999px; padding: 6px 16px; cursor: pointer; font-size: 14px; }
+.tab:hover { color: var(--cream); border-color: var(--cream-muted); }
+.tab[aria-pressed="true"] { background: var(--cream); color: var(--ink); border-color: var(--cream); font-weight: 500; }
+.tab .n { font-family: var(--font-num); font-size: 12px; opacity: 0.7; margin-left: 4px; }
+
+/* 分类：可收起 */
+.shelf-hint { margin: 0; font-size: 13px; color: var(--cream-muted); }
+.search { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 5; display: flex; align-items: center; gap: 10px; background: var(--bg-2); border: 1px solid var(--line-dark); border-radius: 999px; padding: 6px 8px 6px 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.35); }
+.search:focus-within { border-color: var(--maroon-hi); }
+.search .ic { color: var(--cream-muted); font-size: 15px; }
+.search input { flex: 1 1 auto; min-width: 0; background: transparent; border: 0; color: var(--cream); padding: 6px 0; font-size: 15px; }
+.search input:focus { outline: none; }
+.search input::-webkit-search-cancel-button { display: none; }
+.search .qn { font-size: 12px; color: var(--cream-muted); white-space: nowrap; }
+.search .qx { border: 0; background: var(--maroon); color: var(--cream); width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 1; }
+@media (max-width: 900px) { .search { position: static; } }
+.cat-sec > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 6px 0; user-select: none; }
+.cat-sec > summary::-webkit-details-marker { display: none; }
+.cat-sec > summary .chev { width: 22px; height: 22px; border-radius: 50%; background: var(--maroon); color: var(--cream); display: grid; place-items: center; font-size: 11px; flex: 0 0 auto; }
+.cat-sec[open] > summary .chev { transform: rotate(90deg); }
+.cat-sec > summary .nm { font-family: var(--font-display); font-size: 19px; letter-spacing: 0.12em; color: var(--cream); }
+.cat-sec > summary .ct { font-family: var(--font-num); font-size: 13px; color: var(--cream-muted); }
+.cat-sec > summary .cc { font-family: var(--font-num); font-weight: 700; font-size: 13px; color: var(--cream); background: var(--maroon); border-radius: 4px; padding: 1px 8px; letter-spacing: 0.08em; }
+.ticket .no .id { font-weight: 700; color: var(--maroon); letter-spacing: 0.04em; }
+.cat-sec > summary::after { content: ""; flex: 1; border-top: 1px solid var(--line-dark); }
+.cat-sec > summary:hover .nm { color: #fff; }
+.cat-sec > .goods { padding-top: 10px; }
+.shelf-list { display: grid; gap: 18px; }
+
+/* 商品：米色票据 */
+.goods { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; align-items: stretch; }
+.ticket { position: relative; background: var(--paper); color: var(--ink); border-radius: 4px; padding: 16px 16px 14px; display: grid; gap: 6px; align-content: start; min-width: 0;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 10px 24px rgba(0,0,0,0.35); border: 2px solid transparent; cursor: pointer; }
+.ticket.full { cursor: default; }
+.ticket.na { cursor: default; opacity: 0.62; }
+.ticket.na:hover { transform: none; border-color: transparent; }
+.ticket.gonly { opacity: 1; }
+.ticket.gonly .na-tag { border-color: var(--maroon); color: var(--maroon); font-weight: 700; }
+.na-tag { display: inline-block; border: 1px dashed var(--ink-soft); color: var(--ink-soft); border-radius: 999px; padding: 2px 12px; font-size: 13px; letter-spacing: 0.08em; }
+.ticket:hover:not(.full) { border-color: rgba(142, 27, 32, 0.45); }
+.ticket .stepper, .ticket .stepper * { cursor: pointer; }
+.ticket::before { /* 左侧打孔 */
+  content: ""; position: absolute; left: -2px; top: 50%; width: 10px; height: 20px; margin-top: -10px; background: var(--bg); border-radius: 0 10px 10px 0; }
+.ticket.picked { border-color: var(--maroon); }
+.ticket .no { font-family: var(--font-num); font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; gap: 8px; }
+.ticket .name { font-family: var(--font-display); font-weight: 900; font-size: 18px; line-height: 1.35; overflow-wrap: anywhere; }
+.ticket .desc { color: var(--ink-soft); font-size: 13px; overflow-wrap: anywhere; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ticket .desc.open { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.ticket .more.on { display: inline-block; }
+.ticket .more { display: none; justify-self: start; background: none; border: 0; padding: 2px 0; color: var(--maroon); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.ticket .tear { border: 0; border-top: 1px dashed var(--ink-soft); opacity: 0.5; margin: 6px 0 2px; }
+.ticket .bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.ticket .price { font-family: var(--font-num); font-weight: 700; font-size: 22px; color: var(--maroon); font-variant-numeric: tabular-nums; }
+.ticket .limit { font-size: 12px; color: var(--ink-soft); }
+.ticket .limit.hit { color: var(--maroon); font-weight: 500; }
+.seal { position: absolute; top: -10px; right: -8px; width: 38px; height: 38px; border-radius: 50%; background: var(--maroon); color: var(--cream);
+  display: grid; place-items: center; font-family: var(--font-num); font-weight: 700; font-size: 14px;
+  box-shadow: inset 0 0 0 3px var(--maroon), inset 0 0 0 4px rgba(239,229,209,0.55), 0 4px 10px rgba(0,0,0,0.35); }
+.stepper { display: inline-flex; align-items: center; background: var(--ink); border-radius: 999px; padding: 3px; }
+.stepper button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: var(--cream); cursor: pointer; font-size: 18px; line-height: 1; }
+.stepper button:hover:not(:disabled) { background: var(--maroon); }
+.stepper button:disabled { opacity: 0.3; cursor: not-allowed; }
+.stepper output { min-width: 28px; text-align: center; color: var(--cream); font-family: var(--font-num); font-weight: 700; }
+.empty { color: var(--cream-muted); padding: 24px 0; text-align: center; }
+
+/* ---------- 收银小票 ---------- */
+.receipt { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+@media (max-width: 900px) { .receipt { position: static; } }
+.slip { position: relative; background: var(--paper); color: var(--ink); padding: 22px 20px 26px; display: grid; gap: 12px; font-variant-numeric: tabular-nums;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.5); border-top: 6px solid var(--maroon); margin-bottom: 12px; }
+.slip::after { content: ""; position: absolute; left: 0; right: 0; bottom: -11px; height: 12px;
+  background: linear-gradient(135deg, var(--paper) 50%, transparent 50%) 0 0 / 14px 12px repeat-x,
+              linear-gradient(-135deg, var(--paper) 50%, transparent 50%) 0 0 / 14px 12px repeat-x; }
+.slip .head { display: grid; gap: 2px; text-align: center; padding-bottom: 4px; }
+.slip .brand { font-family: var(--font-display); font-weight: 900; font-size: 22px; letter-spacing: 0.24em; color: var(--ink); }
+.slip .kicker { font-family: var(--font-num); font-size: 11px; letter-spacing: 0.32em; color: var(--maroon); text-transform: uppercase; }
+.slip .meta { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 12px; }
+.slip .meta dt { color: var(--ink-soft); }
+.slip .meta dd { margin: 0; font-family: var(--font-num); text-align: right; overflow-wrap: anywhere; }
+.slip hr { border: 0; border-top: 1px dashed var(--ink-soft); margin: 0; opacity: 0.55; }
+.slip .lines { display: grid; gap: 6px; font-size: 14px; }
+.slip .items { display: grid; gap: 10px; }
+.slip .it { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: baseline; }
+.slip .it .nm { font-weight: 500; overflow-wrap: anywhere; line-height: 1.4; }
+.slip .it .cd { display: inline-block; font-family: var(--font-num); font-weight: 700; font-size: 11px; color: var(--maroon); border: 1px solid currentColor; border-radius: 3px; padding: 0 5px; margin-right: 6px; vertical-align: 1px; letter-spacing: 0.04em; }
+.slip .it .am { font-family: var(--font-num); font-weight: 700; white-space: nowrap; }
+.slip .it .sub { grid-column: 1 / -1; font-size: 12px; color: var(--ink-soft); font-family: var(--font-num); }
+.slip .row { display: flex; justify-content: space-between; gap: 10px; }
+.slip .row .k { min-width: 0; overflow-wrap: anywhere; }
+.slip .row .v { font-family: var(--font-num); white-space: nowrap; }
+.slip .row.minus .v { color: var(--maroon); font-weight: 700; }
+.slip .placeholder { color: var(--ink-soft); text-align: center; font-size: 14px; padding: 14px 0; border: 1px dashed var(--paper-2); border-radius: 6px; }
+.slip .total { display: flex; justify-content: space-between; align-items: baseline; border-top: 3px double var(--ink); padding-top: 10px; }
+.slip .total .k { font-family: var(--font-display); font-weight: 900; font-size: 18px; letter-spacing: 0.15em; }
+.slip .total .v { font-family: var(--font-num); font-size: 32px; font-weight: 700; color: var(--maroon); }
+.slip .saved { font-size: 13px; color: var(--maroon); text-align: right; min-height: 1em; margin-top: -8px; }
+.slip label { font-size: 13px; color: var(--ink-soft); display: grid; gap: 4px; }
+.slip input, .slip textarea { background: #fbf6ea; color: var(--ink); border: 1px solid var(--paper-2); border-radius: 4px; padding: 9px 10px; width: 100%; }
+.slip input:focus { border-color: var(--maroon); outline: none; }
+.slip .howto { font-size: 12px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+.paynote { margin: 0; display: flex; gap: 10px; align-items: flex-start; background: rgba(142, 27, 32, 0.22); border: 1px solid var(--maroon); border-radius: 6px; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: var(--cream); }
+.paynote .ic { flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%; background: var(--maroon); color: var(--cream); display: grid; place-items: center; font-weight: 700; font-size: 13px; margin-top: 1px; }
+.paynote b { color: #fff; }
+.it.gift .nm { color: var(--maroon); }
+.it.gift .gtag { display: inline-block; font-size: 11px; font-weight: 700; color: var(--cream); background: var(--maroon); border-radius: 3px; padding: 0 6px; margin-right: 6px; vertical-align: 1px; letter-spacing: 0.08em; }
+.giftbar { font-size: 13px; color: var(--ink); background: rgba(142, 27, 32, 0.08); border: 1px dashed var(--maroon); border-radius: 6px; padding: 8px 10px; display: grid; gap: 6px; }
+.giftbar b { color: var(--maroon); }
+.giftbar .track { height: 6px; background: var(--paper-2); border-radius: 999px; overflow: hidden; }
+.giftbar .fill { height: 100%; background: var(--maroon); border-radius: 999px; width: 0; }
+@media (prefers-reduced-motion: no-preference) { .giftbar .fill { transition: width .3s ease; } }
+.gift-modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); background: rgba(8, 5, 5, 0.72); }
+.gift-modal[hidden] { display: none !important; }
+.gift-card { width: min(360px, 100%); background: var(--paper); color: var(--ink); border-radius: 6px; border-top: 6px solid var(--maroon); padding: 24px 20px 20px; display: grid; gap: 10px; text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,0.6); position: relative; }
+.gift-card .kicker { font-family: var(--font-num); font-size: 11px; letter-spacing: 0.32em; color: var(--maroon); }
+.gift-card h2 { margin: 0; font-family: var(--font-display); font-size: 22px; letter-spacing: 0.08em; }
+.gift-card .book { background: #fbf6ea; border: 1px dashed var(--ink-soft); border-radius: 6px; padding: 14px 12px; display: grid; gap: 4px; }
+.gift-card .book .t { font-family: var(--font-display); font-weight: 900; font-size: 20px; }
+.gift-card .book .d { font-size: 13px; color: var(--ink-soft); }
+.gift-card .book .f { font-family: var(--font-num); font-weight: 700; color: var(--maroon); }
+.gift-card p { margin: 0; font-size: 13px; color: var(--ink-soft); }
+.gift-card { max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto; }
+.gift-card .rule { font-size: 14px; color: var(--ink); }
+.gift-card .rule b { color: var(--maroon); }
+.gmodes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.gmode { border: 1px solid var(--ink-soft); background: transparent; color: var(--ink); border-radius: 999px; padding: 7px 8px; font-size: 13px; cursor: pointer; }
+.gmode[aria-pressed="true"] { background: var(--maroon); border-color: var(--maroon); color: var(--cream); font-weight: 700; }
+.glist { overflow-y: auto; -webkit-overflow-scrolling: touch; display: grid; gap: 6px; text-align: left; min-height: 120px; padding: 2px; }
+.gopt { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; width: 100%; text-align: left; background: #fbf6ea; border: 1px solid var(--paper-2); border-radius: 6px; padding: 9px 10px; cursor: pointer; color: var(--ink); font: inherit; font-size: 14px; }
+.gopt .ck { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--ink-soft); display: grid; place-items: center; font-size: 11px; color: transparent; }
+.gopt[aria-pressed="true"] { border-color: var(--maroon); background: #f6e3df; }
+.gopt[aria-pressed="true"] .ck { background: var(--maroon); border-color: var(--maroon); color: var(--cream); }
+.gopt .gn { min-width: 0; overflow-wrap: anywhere; }
+.gopt .gc { font-family: var(--font-num); font-size: 11px; color: var(--maroon); font-weight: 700; margin-right: 6px; }
+.gopt .gp { font-family: var(--font-num); font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
+.gopt .gp s { opacity: .7; }
+.gfoot { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gcount { font-size: 13px; color: var(--ink-soft); }
+.gift-card .gnote, .giftbar .gnote { margin: 0; font-size: 12px; color: var(--maroon); }
+.giftpick { justify-self: start; border: 1px solid var(--maroon); background: transparent; color: var(--maroon); border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; font-weight: 500; }
+@media (prefers-reduced-motion: no-preference) { .gift-modal:not([hidden]) .gift-card { animation: giftIn .28s ease-out; } @keyframes giftIn { from { transform: translateY(16px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } } }
+.imgout { display: grid; gap: 8px; justify-items: center; background: #fbf6ea; border: 1px dashed var(--ink-soft); border-radius: 6px; padding: 10px; }
+.imgout img { width: 100%; height: auto; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); -webkit-touch-callout: default; user-select: auto; }
+.imgout p { margin: 0; font-size: 12px; color: var(--ink-soft); text-align: center; }
+.btn { border: 0; background: var(--maroon); color: var(--cream); border-radius: 999px; padding: 11px 18px; font-weight: 700; letter-spacing: 0.1em; cursor: pointer;
+  box-shadow: inset 0 0 0 2px var(--maroon), inset 0 0 0 3px rgba(239,229,209,0.45), 0 6px 14px rgba(104,18,22,0.35); }
+.btn:hover { background: var(--maroon-deep); box-shadow: inset 0 0 0 2px var(--maroon-deep), inset 0 0 0 3px rgba(239,229,209,0.45); }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink-soft); letter-spacing: 0.04em; font-weight: 500; }
+.btn.ghost:hover { background: var(--paper-2); }
+.slip .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.slip .actions .btn.primary { grid-column: 1 / -1; padding: 13px 18px; font-size: 16px; }
+.slip .actions .btn.ghost { padding: 9px 12px; }
+.toast { font-size: 13px; min-height: 1.2em; text-align: center; color: var(--maroon); font-weight: 500; }
+#orderText { font-family: var(--font-num); font-size: 12px; min-height: 160px; }
+
+/* 付款方式 */
+.paybox { margin-top: 18px; background: var(--bg-2); border: 1px solid var(--line-dark); border-radius: 6px; padding: 16px; display: grid; gap: 12px; }
+.paybox h2 { margin: 0; font-family: var(--font-display); font-size: 17px; letter-spacing: 0.12em; }
+.paybox .methods { display: flex; gap: 8px; }
+.payhead { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
+.qqchip { display: inline-flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--line-dark); border-radius: 999px; padding: 3px 4px 3px 12px; font-size: 13px; color: var(--cream-muted); }
+.qqchip b { font-family: var(--font-num); font-size: 15px; color: var(--cream); letter-spacing: 0.02em; user-select: all; -webkit-user-select: all; }
+.qqchip .copy { border: 0; background: var(--maroon); color: var(--cream); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.method { flex: 1 1 0; border: 1px solid var(--line-dark); background: var(--bg); color: var(--cream-muted); border-radius: 999px; padding: 8px 10px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.method .dot { width: 10px; height: 10px; border-radius: 50%; }
+.method.wechat .dot { background: #2aae67; }
+.method.alipay .dot { background: #1677ff; }
+.method.qq .dot { background: #12b7f5; }
+.qqinfo { background: var(--paper); color: var(--ink); border-radius: 6px; padding: 14px; display: grid; gap: 8px; justify-items: center; text-align: center; }
+.qqinfo .big { font-family: var(--font-display); font-weight: 900; font-size: 18px; letter-spacing: 0.06em; }
+.qqinfo .amt { font-family: var(--font-num); font-weight: 700; font-size: 20px; color: var(--maroon); }
+.qqinfo .no { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: 14px; }
+.qqinfo .no b { font-family: var(--font-num); font-size: 17px; }
+.qqinfo .copy { border: 1px solid var(--ink-soft); background: transparent; color: var(--ink); border-radius: 999px; padding: 3px 12px; cursor: pointer; font-size: 13px; }
+.qqinfo .tip { font-size: 13px; color: var(--ink-soft); }
+.method:hover { color: var(--cream); border-color: var(--cream-muted); }
+.method[aria-pressed="true"] { background: var(--cream); color: var(--ink); border-color: var(--cream); }
+.qr { background: #fff; border-radius: 6px; padding: 12px; display: grid; justify-items: center; gap: 8px; color: var(--ink); }
+.qr img { width: min(240px, 100%); height: auto; image-rendering: auto; }
+.qr .amt { font-family: var(--font-num); font-weight: 700; font-size: 20px; color: var(--maroon); }
+.qr .tip { font-size: 13px; color: var(--ink-soft); text-align: center; }
+.paybox .after { font-size: 13px; color: var(--cream-muted); margin: 0; line-height: 1.6; }
+.paybox .after b { color: var(--cream); }
+.pay-edit { display: flex; gap: 16px; flex-wrap: wrap; }
+.pay-slot { display: grid; gap: 8px; justify-items: start; background: var(--bg); border: 1px solid var(--line-dark); border-radius: 6px; padding: 12px; min-width: 180px; }
+.pay-slot .lbl { font-weight: 500; display: inline-flex; gap: 6px; align-items: center; }
+.pay-slot img { width: 120px; height: 120px; object-fit: contain; background: #fff; border-radius: 4px; }
+.pay-slot .ph { width: 120px; height: 120px; border: 1px dashed var(--line-dark); border-radius: 4px; display: grid; place-items: center; font-size: 12px; color: var(--cream-muted); }
+.pay-slot .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#qrWechatFile:focus-visible + .upload, #qrAlipayFile:focus-visible + .upload { outline: 2px solid var(--maroon-hi); outline-offset: 2px; }
+
+/* ---------- 店主管理 ---------- */
+.admin { background: var(--bg-2); border: 1px solid var(--line-dark); border-top: 4px solid var(--maroon); border-radius: 6px; padding: 18px; display: grid; gap: 20px; }
+.admin h2 { font-family: var(--font-display); margin: 0; font-size: 20px; letter-spacing: 0.12em; }
+.admin h3 { margin: 0; font-size: 15px; color: var(--cream); }
+.admin .group { display: grid; gap: 10px; }
+.admin .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.admin label.f { display: grid; gap: 4px; font-size: 13px; color: var(--cream-muted); min-width: 0; }
+.admin input[type="text"], .admin input[type="number"], .admin textarea { background: var(--bg); border: 1px solid var(--line-dark); border-radius: 4px; padding: 7px 9px; width: 100%; min-width: 0; }
+.admin input:focus, .admin textarea:focus { border-color: var(--maroon-hi); outline: none; }
+.admin input[type="number"] { font-family: var(--font-num); }
+.admin .hint { font-size: 12px; color: var(--cream-muted); margin: 0; }
+.acats { display: grid; gap: 10px; }
+.acat { border: 1px solid var(--line-dark); border-radius: 6px; background: var(--bg); }
+.acat-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; flex-wrap: wrap; }
+.acat-head .tog { width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--maroon); color: var(--cream); cursor: pointer; font-size: 11px; flex: 0 0 auto; }
+.acat-head .tog[aria-expanded="true"] span { display: inline-block; transform: rotate(90deg); }
+.acat-head input.cname { flex: 1 1 160px; max-width: 280px; font-family: var(--font-display); font-weight: 700; }
+.acat-head .cnt { font-size: 13px; color: var(--cream-muted); }
+.acat-head .spacer { flex: 1; }
+.acat-head .fold { font-size: 13px; color: var(--cream-muted); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.acat-head .fold input { accent-color: var(--maroon); width: 16px; height: 16px; }
+.mini { border: 1px solid var(--line-dark); background: var(--bg-2); color: var(--cream); border-radius: 4px; min-width: 30px; height: 30px; cursor: pointer; padding: 0 8px; font-size: 13px; }
+.mini:hover:not(:disabled) { border-color: var(--cream-muted); }
+.mini:disabled { opacity: 0.3; cursor: not-allowed; }
+.mini.danger { color: var(--maroon-hi); }
+.acat-body { padding: 0 10px 10px; display: grid; gap: 8px; }
+.acat-body .none { font-size: 13px; color: var(--cream-muted); padding: 6px 0; }
+.admin select { background: var(--bg-2); border: 1px solid var(--line-dark); border-radius: 4px; padding: 6px 8px; color: var(--cream); max-width: 150px; }
+.tbl td.o { white-space: nowrap; }
+.tbl-wrap { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; min-width: 880px; font-size: 14px; }
+.tbl th { text-align: left; font-weight: 500; color: var(--cream-muted); font-size: 12px; padding: 4px 6px; }
+.tbl td { padding: 5px 6px; border-top: 1px solid var(--line-dark); vertical-align: top; }
+.tbl td.n input { width: 96px; }
+.tbl td.c input { width: 120px; }
+.linkbtn { background: none; border: 0; color: var(--maroon-hi); cursor: pointer; text-decoration: underline; padding: 6px 4px; }
+.promo-edit { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--cream-muted); font-size: 14px; }
+.promo-edit input[type="number"] { width: 90px; }
+.promo-edit input[type="checkbox"] { accent-color: var(--maroon); width: 18px; height: 18px; }
+.logo-edit { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.logo-edit img { width: 72px; height: 48px; object-fit: contain; }
+.upload { border: 1px solid var(--cream-muted); color: var(--cream); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-size: 14px; }
+.vh { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+#logoFile:focus-visible + .upload { outline: 2px solid var(--maroon-hi); outline-offset: 2px; }
+.admin-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; position: sticky; bottom: 0; background: var(--bg-2); padding-block: 10px 2px; border-top: 1px solid var(--line-dark); }
+.admin-bar .status { font-size: 13px; color: var(--cream-muted); flex: 1 1 200px; }
+.admin-bar .status.dirty { color: var(--brass); }
+.btn.quiet { background: transparent; color: var(--cream); box-shadow: inset 0 0 0 1px var(--line-dark); font-weight: 500; letter-spacing: 0.04em; }
+.btn.quiet:hover { box-shadow: inset 0 0 0 1px var(--cream-muted); }
+/* ---------- 手机底部结算栏 ---------- */
+.mbar { display: none; }
+@media (max-width: 900px) {
+  .mbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; align-items: center; gap: 12px;
+    background: rgba(18, 13, 12, 0.96); border-top: 1px solid var(--maroon);
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    box-shadow: 0 -10px 24px rgba(0,0,0,0.45); }
+  .mbar[hidden] { display: none !important; }
+  .mbar .info { flex: 1 1 auto; min-width: 0; display: grid; line-height: 1.25; }
+  .mbar .cnt { font-size: 12px; color: var(--cream-muted); }
+  .mbar .sum { font-family: var(--font-num); font-weight: 700; font-size: 22px; color: var(--cream); }
+  .mbar .btn { padding: 10px 22px; }
+  body.has-bar { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+  .search { position: sticky; }
+}
+
+/* ---------- 手机排版 ---------- */
+@media (max-width: 600px) {
+  body { font-size: 14px; padding-block: 12px 40px; }
+  .wrap { gap: 18px; }
+  .masthead { padding-top: 0; gap: 8px; }
+  .masthead .logo.stack { width: min(240px, 70%); }
+  .owner-btn { position: static; }
+  .ribbon { font-size: 13px; padding: 5px 18px; }
+  .shelf { gap: 12px; }
+  .shelf-hint { font-size: 12px; }
+  .search { padding: 4px 6px 4px 14px; }
+  .search input { font-size: 16px; }
+  .shelf-list { gap: 12px; }
+  .cat-sec > summary { gap: 8px; }
+  .cat-sec > summary .nm { font-size: 16px; letter-spacing: 0.06em; }
+  .cat-sec > .goods { padding-top: 8px; }
+  .goods { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ticket { padding: 12px 10px 10px 14px; gap: 4px; }
+  .ticket .no .cat { display: none; }
+  .ticket .no { font-size: 11px; }
+  .ticket .name { font-size: 15px; line-height: 1.3; }
+  .ticket .desc { font-size: 12px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .ticket .desc.open { display: block; -webkit-line-clamp: unset; overflow: visible; }
+  .ticket .more.on { display: inline-block; }
+  .ticket .tear { margin: 4px 0 2px; }
+  .ticket .bottom { gap: 6px; }
+  .ticket .price { font-size: 17px; }
+  .ticket .limit { font-size: 11px; }
+  .stepper { padding: 2px; }
+  .stepper button { width: 30px; height: 30px; font-size: 17px; }
+  .stepper output { min-width: 18px; }
+  .seal { top: 6px; right: 6px; width: 30px; height: 30px; font-size: 12px; }
+  .na-tag { font-size: 12px; padding: 2px 10px; }
+  .slip { padding: 18px 16px 22px; }
+  .slip input, .slip textarea { font-size: 16px; }
+  .slip .total .v { font-size: 28px; }
+  .paybox { padding: 14px; }
+  .method { padding: 8px 6px; font-size: 14px; }
+  .admin { padding: 14px; }
+  .admin input[type="text"], .admin input[type="number"], .admin textarea { font-size: 16px; }
+}
+/* 样品图 */
+.ticket .pic { flex: none; width: 84px; border-radius: 3px; overflow: hidden; background: #fff; aspect-ratio: 5 / 4; cursor: zoom-in; position: relative; box-shadow: 0 0 0 1px rgba(36,26,23,.12); }
+.ticket .pic img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.ticket .pic::after { content: attr(data-n); position: absolute; right: 2px; bottom: 2px; background: rgba(36,26,23,.72); color: var(--cream); font-size: 10px; line-height: 1.5; padding: 0 5px; border-radius: 999px; pointer-events: none; }
+.lightbox { position: fixed; inset: 0; z-index: 60; background: rgba(8,5,5,.9); display: grid; place-items: center; padding: 48px 16px 24px; cursor: zoom-out; }
+.lightbox[hidden] { display: none !important; }
+.lightbox img { background: #fff; max-width: 100%; max-height: calc(100vh - 80px); max-height: calc(100dvh - 80px); border-radius: 4px; box-shadow: 0 20px 50px rgba(0,0,0,.6); }
+.lightbox .lbn { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(36,26,23,.75); color: var(--cream); font-size: 26px; line-height: 1; cursor: pointer; }
+.lightbox .lbn.prev { left: 10px; } .lightbox .lbn.next { right: 10px; }
+.lightbox .lbn:hover { background: var(--maroon); }
+.lightbox .lbc { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); left: 50%; transform: translateX(-50%); background: rgba(36,26,23,.75); color: var(--cream); font-family: var(--font-num); font-size: 13px; padding: 2px 12px; border-radius: 999px; }
+.lightbox .lbx { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); right: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--maroon); color: var(--cream); font-size: 22px; line-height: 1; cursor: pointer; }
+.tbl td.pc { white-space: nowrap; }
+.tbl .gthumb { width: 36px; height: 36px; object-fit: cover; border-radius: 3px; vertical-align: middle; margin-right: 4px; background: #fff; }
+@media (max-width: 600px) { .ticket .pic { width: 64px; } }
+.ticket .bottom { align-items: flex-end; flex-wrap: nowrap; }
+.ticket .pl { display: grid; gap: 2px; min-width: 0; }
+.ticket .state { font-size: 12px; color: var(--ink-soft); }
+.ticket.picked .state { color: var(--maroon); font-weight: 700; }
+@media (max-width: 340px) { .goods { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: no-preference) { .ticket { transition: border-color .15s, transform .15s; } .ticket:hover { transform: translateY(-2px); } }
+</style>
 <style id="page-style">
 :root {
   --bg: #120d0c;
@@ -87,6 +471,8 @@ button, input, textarea { font: inherit; color: inherit; }
 .ticket.full { cursor: default; }
 .ticket.na { cursor: default; opacity: 0.62; }
 .ticket.na:hover { transform: none; border-color: transparent; }
+.ticket.gonly { opacity: 1; }
+.ticket.gonly .na-tag { border-color: var(--maroon); color: var(--maroon); font-weight: 700; }
 .na-tag { display: inline-block; border: 1px dashed var(--ink-soft); color: var(--ink-soft); border-radius: 999px; padding: 2px 12px; font-size: 13px; letter-spacing: 0.08em; }
 .ticket:hover:not(.full) { border-color: rgba(142, 27, 32, 0.45); }
 .ticket .stepper, .ticket .stepper * { cursor: pointer; }
@@ -406,7 +792,7 @@ button, input, textarea { font: inherit; color: inherit; }
     </div>
   </div>
 </div>
-<script type="application/json" id="shop-data">{"shop":"暗数工厂","tagline":"适配Kindle，多看，Reeden，售出后不退不换，不议价","note":"选好后点“复制订单图片”保存小票，再按下面的方式付款（备注里写上你的账号名称）。付款后私信厂长，带上这张小票和付款截图，截图里要能看到付款单号。付款前请确认，请勿重复购买。给密码后不退不换。","logo":"","sample":false,"goods":[{"id":1,"cat":"严肃文学样板间","name":"烦人的爱","desc":"作者：埃莱娜·弗兰特 · 最新版本 v2.2","price":200,"max":1,"code":"LIT-01","img":"LIT-01-烦人的爱","imgFull":"LIT-01-烦人的爱-大图"},{"id":2,"cat":"悬疑小说样板间","name":"死亡通知单","desc":"作者：周浩晖 · 最新版本 v2","price":200,"max":1,"code":"SUS-01","img":"SUS-01-死亡通知单","imgFull":"SUS-01-死亡通知单-大图"},{"id":3,"cat":"悬疑小说样板间","name":"恶魔少年","desc":"作者：药丸岳 · 最新版本 v1.1","price":200,"max":1,"code":"SUS-02","img":"SUS-02-恶魔少年","imgFull":"SUS-02-恶魔少年-大图"},{"id":5,"cat":"悬疑小说样板间","name":"隔墙有眼","desc":"最新版本 v1","price":300,"max":1,"code":"SUS-03","img":"SUS-03-隔墙有眼","imgFull":"SUS-03-隔墙有眼-大图"},{"id":4,"cat":"悬疑小说样板间","name":"中秋案（大唐狄公案）","desc":"作者：高罗佩 · 最新版本 v1.0","price":150,"max":1,"code":"GU-16","img":"GU-16-中秋案（大唐狄公案）","imgFull":"GU-16-中秋案（大唐狄公案）-大图"},{"id":7,"cat":"实案记录样板间","name":"犯罪现场分析","desc":"作者：胡向阳 · 最新版本 v1","price":200,"max":1,"code":"RC-01","img":"RC-01-犯罪现场分析","imgFull":"RC-01-犯罪现场分析-大图"},{"id":8,"cat":"实案记录样板间","name":"李昌钰博士现场勘查手册","desc":"作者：李昌钰 · 最新版本 v1","price":500,"max":1,"code":"HL-01","img":"HL-01-李昌钰博士现场勘查手册","imgFull":"HL-01-李昌钰博士现场勘查手册-大图","more":["HL-01-李昌钰博士现场勘查手册-大图-2"]},{"id":9,"cat":"实案记录样板间","name":"李昌钰博士破案实录1-7（2018年版）","desc":"作者：李昌钰 · 最新版本 v1","price":3000,"max":1,"code":"HL-02-08","img":"HL-02-08-李昌钰博士破案实录1-7（2018年版）","imgFull":"HL-02-08-李昌钰博士破案实录1-7（2018年版）-大图","more":["HL-02-08-李昌钰博士破案实录1-7（2018年版）-大图-2","HL-02-08-李昌钰博士破案实录1-7（2018年版）-大图-3"]},{"id":10,"cat":"实案记录样板间","name":"让不可能成为可能","desc":"作者：李昌钰 · 最新版本 v1","price":400,"max":1,"code":"HL-09"},{"id":123,"cat":"实案记录样板间","name":"「天网恢恢」系列","desc":"作者：宇剑 等 · 共 3 本，整套出售，不单卖：\n之一：偷渡·拐女·贩毒·堕落·杀人巨案\n之二：钱欲·假币·骗税·盗窃·走私巨案\n之三：金融·证券·期货·股市·房地产巨案\n后续找到之四，已购买的顾客可免费获得（免费售后）。","price":600,"max":1,"bundle":true,"code":"RC-02-04"},{"id":14,"cat":"社会科学样板间","name":"黑帮老大的一天","desc":"作者：素德·文卡特斯 · 最新版本 v1.0","price":300,"max":1,"code":"SD-01","img":"SD-01-黑帮老大的一天","imgFull":"SD-01-黑帮老大的一天-大图"},{"id":15,"cat":"社会科学样板间","name":"上海妓女: 19-20世纪中国的卖淫与性","desc":"作者：Christian Henriot · 最新版本 v1.6","price":300,"max":1,"code":"SD-02","img":"SD-02-上海妓女_19-20世纪中国的卖淫与性","imgFull":"SD-02-上海妓女_19-20世纪中国的卖淫与性-大图"},{"id":16,"cat":"社会科学样板间","name":"中国“女权”概念的变迁：清末民初的人权和社会性别","desc":"作者：须藤瑞代 · 最新版本 v1","price":300,"max":1,"code":"SD-03","img":"SD-03-中国“女权”概念的变迁：清末民初的人权和社会性别","imgFull":"SD-03-中国“女权”概念的变迁：清末民初的人权和社会性别-大图"},{"id":17,"cat":"社会科学样板间","name":"全球“猎身”：世界信息产业和印度的技术劳工","desc":"作者：项飙 · 最新版本 v1.7","price":300,"max":1,"code":"SD-04","img":"SD-04-全球“猎身”：世界信息产业和印度的技术劳工","imgFull":"SD-04-全球“猎身”：世界信息产业和印度的技术劳工-大图"},{"id":18,"cat":"社会科学样板间","name":"清代社会性别规范","desc":"作者：苏成捷（Matthew H. Sommer） · 最新版本 v1","price":400,"max":1,"code":"SD-05"},{"id":19,"cat":"经济管理样板间","name":"金钱心理学","desc":"作者：摩根豪泽尔 · 最新版本 v1","price":200,"max":1,"code":"ECO-01","img":"ECO-01-金钱心理学","imgFull":"ECO-01-金钱心理学-大图"},{"id":20,"cat":"儿童文学样板间","name":"男生日记 + 女生日记","desc":"作者：杨红樱 · 最新版本 v1.0；两本一起卖，不单卖","price":400,"max":1,"code":"KID-01-02","img":"KID-01-02-男生日记_+_女生日记","imgFull":"KID-01-02-男生日记_+_女生日记-大图"},{"id":21,"cat":"188样板间","name":"188系列 · 整套打包","desc":"包含本分类全部 11 本：娘娘腔、老婆孩子热炕头、你却爱着一个他、职业替身、针锋对决、小白杨、附加遗产、一醉经年、谁把谁当真、火焰戎装、顶级掠食者。整套购买按打包价 ¥49（单买合计 ¥55）；只买其中几本，请单独选择每本，按单买价计算；包含有漫画插图版和无漫画插图版","price":4900,"max":1,"code":"BB-01-11"},{"id":22,"cat":"188样板间","name":"娘娘腔","desc":"作者：水千丞 · 最新版本 v1.1；包含有漫画插图版和无漫画插图版","price":600,"max":1,"code":"BB-01","img":"BB-01-娘娘腔","imgFull":"BB-01-娘娘腔-大图","more":["BB-01-娘娘腔-大图-2"]},{"id":23,"cat":"188样板间","name":"老婆孩子热炕头","desc":"作者：水千丞 · 最新版本 v1；包含有漫画插图版和无漫画插图版","price":200,"max":1,"code":"BB-02","img":"BB-02-老婆孩子热炕头","imgFull":"BB-02-老婆孩子热炕头-大图","more":["BB-02-老婆孩子热炕头-大图-2"]},{"id":24,"cat":"188样板间","name":"你却爱着一个他","desc":"作者：水千丞 · 最新版本 v1；包含有漫画插图版和无漫画插图版","price":700,"max":1,"code":"BB-03","img":"BB-03-你却爱着一个他","imgFull":"BB-03-你却爱着一个他-大图","more":["BB-03-你却爱着一个他-大图-2"]},{"id":25,"cat":"188样板间","name":"职业替身","desc":"作者：水千丞 · 最新版本 v1；包含有漫画插图版和无漫画插图版","price":200,"max":1,"code":"BB-04","img":"BB-04-职业替身","imgFull":"BB-04-职业替身-大图","more":["BB-04-职业替身-大图-2"]},{"id":26,"cat":"188样板间","name":"针锋对决","desc":"作者：水千丞 · 最新版本 v1.1；包含有漫画插图版和无漫画插图版","price":700,"max":1,"code":"BB-05","img":"BB-05-针锋对决","imgFull":"BB-05-针锋对决-大图","more":["BB-05-针锋对决-大图-2"]},{"id":27,"cat":"188样板间","name":"小白杨","desc":"作者：水千丞 · 最新版本 v9.1；包含有漫画插图版和无漫画插图版","price":400,"max":1,"code":"BB-06","img":"BB-06-小白杨","imgFull":"BB-06-小白杨-大图","more":["BB-06-小白杨-大图-2","BB-06-小白杨-大图-3"]},{"id":28,"cat":"188样板间","name":"附加遗产","desc":"作者：水千丞 · 最新版本 v1.5；包含有漫画插图版和无漫画插图版","price":500,"max":1,"code":"BB-07","img":"BB-07-附加遗产","imgFull":"BB-07-附加遗产-大图","more":["BB-07-附加遗产-大图-2"]},{"id":29,"cat":"188样板间","name":"一醉经年","desc":"作者：水千丞 · 最新版本 v1.2；包含有漫画插图版和无漫画插图版","price":700,"max":1,"code":"BB-08","img":"BB-08-一醉经年","imgFull":"BB-08-一醉经年-大图","more":["BB-08-一醉经年-大图-2"]},{"id":30,"cat":"188样板间","name":"谁把谁当真","desc":"作者：水千丞 · 最新版本 v1.2；包含有漫画插图版和无漫画插图版","price":600,"max":1,"code":"BB-09","img":"BB-09-谁把谁当真","imgFull":"BB-09-谁把谁当真-大图","more":["BB-09-谁把谁当真-大图-2"]},{"id":31,"cat":"188样板间","name":"火焰戎装","desc":"作者：水千丞 · 最新版本 v1；包含有漫画插图版和无漫画插图版","price":400,"max":1,"code":"BB-10","img":"BB-10-火焰戎装","imgFull":"BB-10-火焰戎装-大图","more":["BB-10-火焰戎装-大图-2"]},{"id":32,"cat":"188样板间","name":"顶级掠食者","desc":"作者：水千丞 · 最新版本 v1；包含有漫画插图版和无漫画插图版","price":500,"max":1,"code":"BB-11","img":"BB-11-顶级掠食者","imgFull":"BB-11-顶级掠食者-大图","more":["BB-11-顶级掠食者-大图-2"]},{"id":33,"cat":"驱魔师系列样板间","name":"驱魔师系列 · 整套打包","desc":"包含本分类全部 5 本：国家一级注册驱魔师上岗培训通知、天宝伏妖录、定海浮生录、清平梦华录、万物风华录。整套购买按打包价 ¥26（单买合计 ¥29）；只买其中几本，请单独选择每本，按单买价计算。","price":2600,"max":1,"code":"BB-12-16","img":"BB-12-16-驱魔师系列_·_整套打包","imgFull":"BB-12-16-驱魔师系列_·_整套打包-大图"},{"id":34,"cat":"驱魔师系列样板间","name":"国家一级注册驱魔师上岗培训通知","desc":"作者：非天夜翔 · 最新版本 v3","price":800,"max":1,"code":"BB-12","img":"BB-12-国家一级注册驱魔师上岗培训通知","imgFull":"BB-12-国家一级注册驱魔师上岗培训通知-大图"},{"id":35,"cat":"驱魔师系列样板间","name":"天宝伏妖录","desc":"作者：非天夜翔 · 最新版本 v1","price":500,"max":1,"code":"BB-13","img":"BB-13-天宝伏妖录","imgFull":"BB-13-天宝伏妖录-大图"},{"id":36,"cat":"驱魔师系列样板间","name":"定海浮生录","desc":"作者：非天夜翔 · 最新版本 v1","price":500,"max":1,"code":"BB-14","img":"BB-14-定海浮生录","imgFull":"BB-14-定海浮生录-大图"},{"id":37,"cat":"驱魔师系列样板间","name":"清平梦华录","desc":"作者：非天夜翔 · 最新版本 v1","price":500,"max":1,"code":"BB-15","img":"BB-15-清平梦华录","imgFull":"BB-15-清平梦华录-大图"},{"id":38,"cat":"驱魔师系列样板间","name":"万物风华录","desc":"作者：非天夜翔 · 最新版本 v1","price":600,"max":1,"code":"BB-16","img":"BB-16-万物风华录","imgFull":"BB-16-万物风华录-大图"},{"id":39,"cat":"振华系列样板间","name":"振华系列 · 整套打包","desc":"包含本分类全部 4 本：你好，旧时光、暗恋 橘生淮南、最好的我们、这么多年。整套购买按打包价 ¥18（单买合计 ¥21）；只买其中几本，请单独选择每本，按单买价计算。","price":1800,"max":1,"code":"BG-01-04","img":"BG-01-04-振华系列_·_整套打包","imgFull":"BG-01-04-振华系列_·_整套打包-大图"},{"id":40,"cat":"振华系列样板间","name":"你好，旧时光","desc":"作者：八月长安 · 最新版本 v1.1","price":700,"max":1,"code":"BG-01","img":"BG-01-你好，旧时光","imgFull":"BG-01-你好，旧时光-大图"},{"id":41,"cat":"振华系列样板间","name":"暗恋 橘生淮南","desc":"作者：八月长安 · 最新版本 v1.1","price":500,"max":1,"code":"BG-02","img":"BG-02-暗恋_橘生淮南","imgFull":"BG-02-暗恋_橘生淮南-大图"},{"id":42,"cat":"振华系列样板间","name":"最好的我们","desc":"作者：八月长安 · 最新版本 v1.2","price":500,"max":1,"code":"BG-03","img":"BG-03-最好的我们","imgFull":"BG-03-最好的我们-大图"},{"id":43,"cat":"振华系列样板间","name":"这么多年","desc":"作者：八月长安 · 最新版本 v1.1","price":400,"max":1,"code":"BG-04","img":"BG-04-这么多年","imgFull":"BG-04-这么多年-大图"},{"id":125,"cat":"沧月系列样板间","name":"沧月系列 · 整套打包","desc":"作者：沧月 · 包含本分类全部 9 项：「镜」系列、「听雪楼」系列、「鼎剑阁」系列、「羽」系列、「武之魂」系列、花镜、风玫瑰、2012末夜、夜照燃星（共 29 本）。整套购买按打包价 ¥30（单买合计 ¥34）；只买其中几项，请单独选择，按单买价计算。","price":3000,"max":1,"bundle":true,"code":"BG-19-47"},{"id":116,"cat":"沧月系列样板间","name":"「镜」系列","desc":"作者：沧月 · 共 7 本：双城、破军、龙战、辟天、神寂、织梦者、朱颜。整套出售，不单卖。","price":600,"max":1,"bundle":true,"code":"BG-19-25","img":"BG-19-25-「镜」系列","imgFull":"BG-19-25-「镜」系列-大图","more":["BG-19-25-「镜」系列-大图-2","BG-19-25-「镜」系列-大图-3","BG-19-25-「镜」系列-大图-4","BG-19-25-「镜」系列-大图-5","BG-19-25-「镜」系列-大图-6","BG-19-25-「镜」系列-大图-7"]},{"id":117,"cat":"沧月系列样板间","name":"「听雪楼」系列","desc":"作者：沧月 · 共 7 本：血薇、护花铃、指间沙、神兵阁、火焰鸢尾、忘川、荒原雪。整套出售，不单卖。","price":600,"max":1,"bundle":true,"code":"BG-26-32"},{"id":118,"cat":"沧月系列样板间","name":"「鼎剑阁」系列","desc":"作者：沧月 · 共 4 本：七夜雪、大漠荒颜·帝都赋、幻世·剑歌·碧城、曼珠沙华·彼岸花。整套出售，不单卖。","price":500,"max":1,"bundle":true,"code":"BG-33-36","img":"BG-33-36-「鼎剑阁」系列","imgFull":"BG-33-36-「鼎剑阁」系列-大图","more":["BG-33-36-「鼎剑阁」系列-大图-2","BG-33-36-「鼎剑阁」系列-大图-3"]},{"id":119,"cat":"沧月系列样板间","name":"「羽」系列","desc":"作者：沧月 · 共 4 本：黯月之翼、苍穹之烬、赤炎之瞳、青空之蓝。整套出售，不单卖。","price":500,"max":1,"bundle":true,"code":"BG-37-40"},{"id":120,"cat":"沧月系列样板间","name":"「武之魂」系列","desc":"作者：沧月 · 共 3 本：星坠篇、沧海篇、夜船篇。整套出售，不单卖。","price":400,"max":1,"bundle":true,"code":"BG-41-43"},{"id":69,"cat":"沧月系列样板间","name":"花镜","desc":"作者：沧月 · 最新版本 v1","price":200,"max":1,"code":"BG-44"},{"id":70,"cat":"沧月系列样板间","name":"风玫瑰","desc":"作者：沧月 · 最新版本 v1","price":200,"max":1,"code":"BG-45"},{"id":71,"cat":"沧月系列样板间","name":"2012末夜","desc":"作者：沧月 · 最新版本 v1","price":200,"max":1,"code":"BG-46"},{"id":72,"cat":"沧月系列样板间","name":"夜照燃星","desc":"作者：沧月 · 最新版本 v1；实体书目前只出到第二部，包后续更新","price":200,"max":1,"code":"BG-47"},{"id":122,"cat":"顾漫系列样板间","name":"顾漫三部曲 · 整套打包","desc":"包含本分类全部 3 本：何以笙箫默、微微一笑很倾城、杉杉来吃。整套购买按打包价 ¥8（单买合计 ¥9）；只买其中几本，请单独选择每本，按单买价计算。","price":800,"max":1,"bundle":true,"code":"BG-48-50"},{"id":73,"cat":"顾漫系列样板间","name":"何以笙箫默","desc":"作者：顾漫 · 最新版本 v1","price":300,"max":1,"code":"BG-48"},{"id":74,"cat":"顾漫系列样板间","name":"微微一笑很倾城","desc":"作者：顾漫 · 最新版本 v1","price":300,"max":1,"code":"BG-49"},{"id":75,"cat":"顾漫系列样板间","name":"杉杉来吃","desc":"作者：顾漫 · 最新版本 v1","price":300,"max":1,"code":"BG-50"},{"id":102,"cat":"七宝酥系列样板间","name":"光鲜宅女","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-51"},{"id":103,"cat":"七宝酥系列样板间","name":"三梳","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-52"},{"id":104,"cat":"七宝酥系列样板间","name":"当我上门遛狗发现狗主人是大帅比后","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-53"},{"id":105,"cat":"七宝酥系列样板间","name":"当我在地铁上误连别人的手机蓝牙后","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-54"},{"id":106,"cat":"七宝酥系列样板间","name":"分开的意义","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-55"},{"id":107,"cat":"七宝酥系列样板间","name":"国王长着驴耳朵","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-56"},{"id":108,"cat":"七宝酥系列样板间","name":"今晚还听么","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-57"},{"id":109,"cat":"七宝酥系列样板间","name":"狙击蝴蝶","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-58"},{"id":110,"cat":"七宝酥系列样板间","name":"王者峡谷不需要我","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-59"},{"id":111,"cat":"七宝酥系列样板间","name":"小雪落在车顶上","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-60"},{"id":112,"cat":"七宝酥系列样板间","name":"许愿池的王八少女","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-61"},{"id":113,"cat":"七宝酥系列样板间","name":"呀！我心里有鬼","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-62"},{"id":114,"cat":"七宝酥系列样板间","name":"一整个宇宙换一颗青柠","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-63"},{"id":76,"cat":"BL单本样板间","name":"沉舟","desc":"作者：楚寒衣青 · 最新版本 v1.4","price":400,"max":1,"code":"BB-17","img":"BB-17-沉舟","imgFull":"BB-17-沉舟-大图"},{"id":77,"cat":"BL单本样板间","name":"我开动物园那些年","desc":"作者：拉棉花糖的兔子 · 最新版本 v1","price":300,"max":1,"code":"BB-18","img":"BB-18-我开动物园那些年","imgFull":"BB-18-我开动物园那些年-大图"},{"id":78,"cat":"BL单本样板间","name":"非职业半仙","desc":"作者：拉棉花糖的兔子 · 最新版本 v1","price":300,"max":1,"code":"BB-19","img":"BB-19-非职业半仙","imgFull":"BB-19-非职业半仙-大图"},{"id":79,"cat":"BL单本样板间","name":"下饭菜","desc":"作者：芥菜糊糊 · 最新版本 v1.1","price":300,"max":1,"code":"BB-20","img":"BB-20-下饭菜","imgFull":"BB-20-下饭菜-大图"},{"id":80,"cat":"BL单本样板间","name":"不要在垃圾桶里捡男朋友","desc":"作者：骑鲸南去 · 最新版本 v1.1","price":300,"max":1,"code":"BB-21","img":"BB-21-不要在垃圾桶里捡男朋友","imgFull":"BB-21-不要在垃圾桶里捡男朋友-大图"},{"id":81,"cat":"BL单本样板间","name":"魔道祖师","desc":"作者：墨香铜臭 · 最新版本 v1。仅适配Kindle。","price":800,"max":1,"code":"BB-22","img":"BB-22-魔道祖师","imgFull":"BB-22-魔道祖师-大图"},{"id":82,"cat":"BG单本样板间","name":"长安小饭馆","desc":"作者：樱桃糕 · 最新版本 v2.0","price":300,"max":1,"code":"BG-05","img":"BG-05-长安小饭馆","imgFull":"BG-05-长安小饭馆-大图"},{"id":83,"cat":"BG单本样板间","name":"在国子监开小卖部","desc":"作者：松雪酥 · 最新版本 v1.1","price":300,"max":1,"code":"BG-06","img":"BG-06-在国子监开小卖部","imgFull":"BG-06-在国子监开小卖部-大图"},{"id":84,"cat":"BG单本样板间","name":"许你万丈光芒好","desc":"作者：囧囧有妖 · 最新版本 v2.2","price":200,"max":1,"code":"BG-07","img":"BG-07-许你万丈光芒好","imgFull":"BG-07-许你万丈光芒好-大图"},{"id":85,"cat":"BG单本样板间","name":"十年一品温如言","desc":"作者：书海沧生 · 最新版本 v1.4","price":200,"max":1,"code":"BG-08","img":"BG-08-十年一品温如言","imgFull":"BG-08-十年一品温如言-大图"},{"id":86,"cat":"BG单本样板间","name":"末日降临18楼全员恶人","desc":"作者：程加加 · 最新版本 v1.6","price":200,"max":1,"code":"BG-09","img":"BG-09-末日降临18楼全员恶人","imgFull":"BG-09-末日降临18楼全员恶人-大图"},{"id":87,"cat":"BG单本样板间","name":"夏有乔木雅望天堂","desc":"作者：籽月 · 最新版本 v2.6","price":200,"max":1,"code":"BG-10","img":"BG-10-夏有乔木雅望天堂","imgFull":"BG-10-夏有乔木雅望天堂-大图"},{"id":88,"cat":"BG单本样板间","name":"下堂王妃","desc":"作者：迩七 · 最新版本 v1.0","price":200,"max":1,"code":"BG-11","img":"BG-11-下堂王妃","imgFull":"BG-11-下堂王妃-大图"},{"id":89,"cat":"BG单本样板间","name":"脱缰🥩","desc":"作者：鸣銮 · 最新版本 v1.2","price":200,"max":1,"code":"BG-12","img":"BG-12-脱缰🥩","imgFull":"BG-12-脱缰🥩-大图"},{"id":90,"cat":"BG单本样板间","name":"大英雄时代","desc":"作者：priest · 最新版本 v1.0","price":200,"max":1,"code":"BG-13","img":"BG-13-大英雄时代","imgFull":"BG-13-大英雄时代-大图"},{"id":91,"cat":"BG单本样板间","name":"咸山骨祠","desc":"作者：子琼 · 最新版本 v1","price":200,"max":1,"code":"BG-14","img":"BG-14-咸山骨祠","imgFull":"BG-14-咸山骨祠-大图"},{"id":92,"cat":"BG单本样板间","name":"不可名状的城镇","desc":"作者：子琼 · 最新版本 v1.4","price":200,"max":1,"code":"BG-15","img":"BG-15-不可名状的城镇","imgFull":"BG-15-不可名状的城镇-大图"},{"id":93,"cat":"BG单本样板间","name":"深空降临","desc":"作者：子琼 · 最新版本 v1","price":200,"max":1,"code":"BG-16","img":"BG-16-深空降临","imgFull":"BG-16-深空降临-大图"},{"id":94,"cat":"BG单本样板间","name":"天堂玫瑰🥩","desc":"作者：美人乔 · 最新版本 v1.1","price":200,"max":1,"code":"BG-17","img":"BG-17-天堂玫瑰🥩","imgFull":"BG-17-天堂玫瑰🥩-大图"},{"id":95,"cat":"BG单本样板间","name":"If I never met you","desc":"作者：Mhairi McFarlane · 最新版本 v1；北美晋江，AI 翻译","price":100,"max":1,"code":"BG-18","img":"BG-18-If_I_never_met_you","imgFull":"BG-18-If_I_never_met_you-大图"},{"id":124,"cat":"BG单本样板间","name":"我和黑粉结婚了","desc":"作者：安知晓","price":0,"max":1,"na":true,"code":"BG-64"},{"id":96,"cat":"GB单本样板间","name":"白日烟花","desc":"作者：双手揣兜 · 最新版本 v1.1","price":200,"max":1,"code":"GB-01","img":"GB-01-白日烟花","imgFull":"GB-01-白日烟花-大图"},{"id":97,"cat":"GB单本样板间","name":"声控漫画家","desc":"作者：清月见 · 最新版本 v1.0","price":200,"max":1,"code":"GB-02","img":"GB-02-声控漫画家","imgFull":"GB-02-声控漫画家-大图"},{"id":98,"cat":"GL单本样板间","name":"我亲爱的法医小姐","desc":"作者：酒暖春深 · 最新版本 v1.3；包含有漫画插图版和无漫画插图版","price":500,"max":1,"code":"GG-01","img":"GG-01-我亲爱的法医小姐","imgFull":"GG-01-我亲爱的法医小姐-大图"},{"id":99,"cat":"GL单本样板间","name":"影后成双","desc":"作者：玄笺 · 最新版本 v1.6","price":200,"max":1,"code":"GG-02","img":"GG-02-影后成双","imgFull":"GG-02-影后成双-大图"},{"id":100,"cat":"GL单本样板间","name":"希望你真的很快乐","desc":"作者：七小皇叔 · 最新版本 v1.0","price":300,"max":1,"code":"GG-03","img":"GG-03-希望你真的很快乐","imgFull":"GG-03-希望你真的很快乐-大图"},{"id":101,"cat":"无CP单本样板间","name":"四栋十三号公寓","desc":"作者：小虎鲨 · 最新版本 v1","price":300,"max":1,"code":"NCP-01","img":"NCP-01-四栋十三号公寓","imgFull":"NCP-01-四栋十三号公寓-大图"},{"id":115,"cat":"严肃文学样板间","name":"多欲之年","desc":"作者：权延赤","price":200,"max":1,"code":"LIT-02","giftOnly":true},{"id":121,"cat":"同人文样板间","name":"王道文","desc":"共14本：BL13本&BG1本。仅适配Kindle","price":1000,"max":1,"code":"TR-01","img":"TR-01-王道文","imgFull":"TR-01-王道文-大图","more":["TR-01-王道文-大图-2","TR-01-王道文-大图-3"]}],"promo":{"mjOn":false,"mjOver":10000,"mjOff":1000,"mjStack":false,"mzOn":false,"mzOver":1800,"mz":9,"zkOn":false,"zk":9,"gift":{"on":true,"step":1000,"cheapMax":200,"endDate":"2026-11-15"}},"cats":["严肃文学样板间","悬疑小说样板间","实案记录样板间","社会科学样板间","经济管理样板间","儿童文学样板间","188样板间","驱魔师系列样板间","振华系列样板间","沧月系列样板间","顾漫系列样板间","七宝酥系列样板间","BL单本样板间","BG单本样板间","GB单本样板间","GL单本样板间","无CP单本样板间","同人文样板间"],"pay":{"qrWechat":"img/qr-wechat-dc7ce113.webp","qrAlipay":"img/qr-alipay-edd2bad8.webp","qqOn":true,"qqNo":"3641246118"},"foldCats":["严肃文学样板间","悬疑小说样板间","实案记录样板间","社会科学样板间","经济管理样板间","儿童文学样板间","188样板间","驱魔师系列样板间","振华系列样板间","沧月系列样板间","顾漫系列样板间","BL单本样板间","BG单本样板间","GB单本样板间","GL单本样板间","无CP单本样板间","七宝酥系列样板间","同人文样板间"],"catCodes":{"严肃文学样板间":"LIT","悬疑小说样板间":"SUS","实案记录样板间":"RC","社会科学样板间":"SD","经济管理样板间":"ECO","儿童文学样板间":"KID","188样板间":"BB","驱魔师系列样板间":"BB","振华系列样板间":"BG","沧月系列样板间":"BG","顾漫系列样板间":"BG","BL单本样板间":"BB","BG单本样板间":"BG","GB单本样板间":"GB","GL单本样板间":"GG","无CP单本样板间":"NCP","七宝酥系列样板间":"BG","同人文样板间":"TR"},"imgDir":"img/"}</script>
+<script type="application/json" id="shop-data">{"shop":"暗数工厂","tagline":"适配Kindle，多看，Reeden，售出后不退不换，不议价","note":"选好后点“复制订单图片”保存小票，再按下面的方式付款（备注里写上你的账号名称）。付款后私信厂长，带上这张小票和付款截图，截图里要能看到付款单号。付款前请确认，请勿重复购买。给密码后不退不换。","logo":"","sample":false,"goods":[{"id":1,"cat":"严肃文学样板间","name":"烦人的爱","desc":"作者：埃莱娜·弗兰特 · 最新版本 v2.2","price":200,"max":1,"code":"LIT-01","img":"LIT-01-烦人的爱","imgFull":"LIT-01-烦人的爱-大图"},{"id":2,"cat":"悬疑小说样板间","name":"死亡通知单","desc":"作者：周浩晖 · 最新版本 v2","price":200,"max":1,"code":"SUS-01","img":"SUS-01-死亡通知单","imgFull":"SUS-01-死亡通知单-大图"},{"id":3,"cat":"悬疑小说样板间","name":"恶魔少年","desc":"作者：药丸岳 · 最新版本 v1.1","price":200,"max":1,"code":"SUS-02","img":"SUS-02-恶魔少年","imgFull":"SUS-02-恶魔少年-大图"},{"id":5,"cat":"悬疑小说样板间","name":"隔墙有眼","desc":"最新版本 v1","price":300,"max":1,"code":"SUS-03","img":"SUS-03-隔墙有眼","imgFull":"SUS-03-隔墙有眼-大图"},{"id":4,"cat":"悬疑小说样板间","name":"中秋案（大唐狄公案）","desc":"作者：高罗佩 · 最新版本 v1.0","price":150,"max":1,"code":"GU-16","img":"GU-16-中秋案（大唐狄公案）","imgFull":"GU-16-中秋案（大唐狄公案）-大图"},{"id":7,"cat":"实案记录样板间","name":"犯罪现场分析","desc":"作者：胡向阳 · 最新版本 v1","price":200,"max":1,"code":"RC-01","img":"RC-01-犯罪现场分析","imgFull":"RC-01-犯罪现场分析-大图"},{"id":8,"cat":"实案记录样板间","name":"李昌钰博士现场勘查手册","desc":"作者：李昌钰 · 最新版本 v1","price":500,"max":1,"code":"HL-01","img":"HL-01-李昌钰博士现场勘查手册","imgFull":"HL-01-李昌钰博士现场勘查手册-大图","more":["HL-01-李昌钰博士现场勘查手册-大图-2"]},{"id":9,"cat":"实案记录样板间","name":"李昌钰博士破案实录1-7（2018年版）","desc":"作者：李昌钰 · 最新版本 v1","price":3000,"max":1,"code":"HL-02-08","img":"HL-02-08-李昌钰博士破案实录1-7（2018年版）","imgFull":"HL-02-08-李昌钰博士破案实录1-7（2018年版）-大图","more":["HL-02-08-李昌钰博士破案实录1-7（2018年版）-大图-2","HL-02-08-李昌钰博士破案实录1-7（2018年版）-大图-3"]},{"id":10,"cat":"实案记录样板间","name":"让不可能成为可能","desc":"作者：李昌钰 · 最新版本 v1","price":400,"max":1,"code":"HL-09","img":"HL-09-让不可能成为可能","imgFull":"HL-09-让不可能成为可能-大图"},{"id":123,"cat":"实案记录样板间","name":"「天网恢恢」系列","desc":"作者：宇剑 等 · 共 3 本，整套出售，不单卖：\n之一：偷渡·拐女·贩毒·堕落·杀人巨案\n之二：钱欲·假币·骗税·盗窃·走私巨案\n之三：金融·证券·期货·股市·房地产巨案\n后续找到之四，已购买的顾客可免费获得（免费售后）。","price":600,"max":1,"bundle":true,"code":"RC-02-04","img":"RC-02-04-「天网恢恢」系列","imgFull":"RC-02-04-「天网恢恢」系列-大图","more":["RC-02-04-「天网恢恢」系列-大图-2","RC-02-04-「天网恢恢」系列-大图-3"]},{"id":14,"cat":"社会科学样板间","name":"黑帮老大的一天","desc":"作者：素德·文卡特斯 · 最新版本 v1.0","price":300,"max":1,"code":"SD-01","img":"SD-01-黑帮老大的一天","imgFull":"SD-01-黑帮老大的一天-大图"},{"id":15,"cat":"社会科学样板间","name":"上海妓女: 19-20世纪中国的卖淫与性","desc":"作者：Christian Henriot · 最新版本 v1.6","price":300,"max":1,"code":"SD-02","img":"SD-02-上海妓女_19-20世纪中国的卖淫与性","imgFull":"SD-02-上海妓女_19-20世纪中国的卖淫与性-大图"},{"id":16,"cat":"社会科学样板间","name":"中国“女权”概念的变迁：清末民初的人权和社会性别","desc":"作者：须藤瑞代 · 最新版本 v1","price":300,"max":1,"code":"SD-03","img":"SD-03-中国“女权”概念的变迁：清末民初的人权和社会性别","imgFull":"SD-03-中国“女权”概念的变迁：清末民初的人权和社会性别-大图"},{"id":17,"cat":"社会科学样板间","name":"全球“猎身”：世界信息产业和印度的技术劳工","desc":"作者：项飙 · 最新版本 v1.7","price":300,"max":1,"code":"SD-04","img":"SD-04-全球“猎身”：世界信息产业和印度的技术劳工","imgFull":"SD-04-全球“猎身”：世界信息产业和印度的技术劳工-大图"},{"id":18,"cat":"社会科学样板间","name":"清代社会性别规范","desc":"作者：苏成捷（Matthew H. Sommer） · 最新版本 v1","price":400,"max":1,"code":"SD-05","img":"SD-05-清代社会性别规范","imgFull":"SD-05-清代社会性别规范-大图"},{"id":19,"cat":"经济管理样板间","name":"金钱心理学","desc":"作者：摩根豪泽尔 · 最新版本 v1","price":200,"max":1,"code":"ECO-01","img":"ECO-01-金钱心理学","imgFull":"ECO-01-金钱心理学-大图"},{"id":20,"cat":"儿童文学样板间","name":"男生日记 + 女生日记","desc":"作者：杨红樱 · 最新版本 v1.0；两本一起卖，不单卖","price":400,"max":1,"code":"KID-01-02","img":"KID-01-02-男生日记_+_女生日记","imgFull":"KID-01-02-男生日记_+_女生日记-大图"},{"id":21,"cat":"188样板间","name":"188系列 · 整套打包","desc":"包含本分类全部 11 本：娘娘腔、老婆孩子热炕头、你却爱着一个他、职业替身、针锋对决、小白杨、附加遗产、一醉经年、谁把谁当真、火焰戎装、顶级掠食者。整套购买按打包价 ¥49（单买合计 ¥55）；只买其中几本，请单独选择每本，按单买价计算；包含有漫画插图版和无漫画插图版","price":4900,"max":1,"code":"BB-01-11"},{"id":22,"cat":"188样板间","name":"娘娘腔","desc":"作者：水千丞 · 最新版本 v1.1；包含有漫画插图版和无漫画插图版","price":600,"max":1,"code":"BB-01","img":"BB-01-娘娘腔","imgFull":"BB-01-娘娘腔-大图","more":["BB-01-娘娘腔-大图-2"]},{"id":23,"cat":"188样板间","name":"老婆孩子热炕头","desc":"作者：水千丞 · 最新版本 v1；包含有漫画插图版和无漫画插图版","price":200,"max":1,"code":"BB-02","img":"BB-02-老婆孩子热炕头","imgFull":"BB-02-老婆孩子热炕头-大图","more":["BB-02-老婆孩子热炕头-大图-2"]},{"id":24,"cat":"188样板间","name":"你却爱着一个他","desc":"作者：水千丞 · 最新版本 v1；包含有漫画插图版和无漫画插图版","price":700,"max":1,"code":"BB-03","img":"BB-03-你却爱着一个他","imgFull":"BB-03-你却爱着一个他-大图","more":["BB-03-你却爱着一个他-大图-2"]},{"id":25,"cat":"188样板间","name":"职业替身","desc":"作者：水千丞 · 最新版本 v1；包含有漫画插图版和无漫画插图版","price":200,"max":1,"code":"BB-04","img":"BB-04-职业替身","imgFull":"BB-04-职业替身-大图","more":["BB-04-职业替身-大图-2"]},{"id":26,"cat":"188样板间","name":"针锋对决","desc":"作者：水千丞 · 最新版本 v1.1；包含有漫画插图版和无漫画插图版","price":700,"max":1,"code":"BB-05","img":"BB-05-针锋对决","imgFull":"BB-05-针锋对决-大图","more":["BB-05-针锋对决-大图-2"]},{"id":27,"cat":"188样板间","name":"小白杨","desc":"作者：水千丞 · 最新版本 v9.1；包含有漫画插图版和无漫画插图版","price":400,"max":1,"code":"BB-06","img":"BB-06-小白杨","imgFull":"BB-06-小白杨-大图","more":["BB-06-小白杨-大图-2","BB-06-小白杨-大图-3"]},{"id":28,"cat":"188样板间","name":"附加遗产","desc":"作者：水千丞 · 最新版本 v1.5；包含有漫画插图版和无漫画插图版","price":500,"max":1,"code":"BB-07","img":"BB-07-附加遗产","imgFull":"BB-07-附加遗产-大图","more":["BB-07-附加遗产-大图-2"]},{"id":29,"cat":"188样板间","name":"一醉经年","desc":"作者：水千丞 · 最新版本 v1.2；包含有漫画插图版和无漫画插图版","price":700,"max":1,"code":"BB-08","img":"BB-08-一醉经年","imgFull":"BB-08-一醉经年-大图","more":["BB-08-一醉经年-大图-2"]},{"id":30,"cat":"188样板间","name":"谁把谁当真","desc":"作者：水千丞 · 最新版本 v1.2；包含有漫画插图版和无漫画插图版","price":600,"max":1,"code":"BB-09","img":"BB-09-谁把谁当真","imgFull":"BB-09-谁把谁当真-大图","more":["BB-09-谁把谁当真-大图-2"]},{"id":31,"cat":"188样板间","name":"火焰戎装","desc":"作者：水千丞 · 最新版本 v1；包含有漫画插图版和无漫画插图版","price":400,"max":1,"code":"BB-10","img":"BB-10-火焰戎装","imgFull":"BB-10-火焰戎装-大图","more":["BB-10-火焰戎装-大图-2"]},{"id":32,"cat":"188样板间","name":"顶级掠食者","desc":"作者：水千丞 · 最新版本 v1；包含有漫画插图版和无漫画插图版","price":500,"max":1,"code":"BB-11","img":"BB-11-顶级掠食者","imgFull":"BB-11-顶级掠食者-大图","more":["BB-11-顶级掠食者-大图-2"]},{"id":33,"cat":"驱魔师系列样板间","name":"驱魔师系列 · 整套打包","desc":"包含本分类全部 5 本：国家一级注册驱魔师上岗培训通知、天宝伏妖录、定海浮生录、清平梦华录、万物风华录。整套购买按打包价 ¥26（单买合计 ¥29）；只买其中几本，请单独选择每本，按单买价计算。","price":2600,"max":1,"code":"BB-12-16","img":"BB-12-16-驱魔师系列_·_整套打包","imgFull":"BB-12-16-驱魔师系列_·_整套打包-大图"},{"id":34,"cat":"驱魔师系列样板间","name":"国家一级注册驱魔师上岗培训通知","desc":"作者：非天夜翔 · 最新版本 v3","price":800,"max":1,"code":"BB-12","img":"BB-12-国家一级注册驱魔师上岗培训通知","imgFull":"BB-12-国家一级注册驱魔师上岗培训通知-大图"},{"id":35,"cat":"驱魔师系列样板间","name":"天宝伏妖录","desc":"作者：非天夜翔 · 最新版本 v1","price":500,"max":1,"code":"BB-13","img":"BB-13-天宝伏妖录","imgFull":"BB-13-天宝伏妖录-大图"},{"id":36,"cat":"驱魔师系列样板间","name":"定海浮生录","desc":"作者：非天夜翔 · 最新版本 v1","price":500,"max":1,"code":"BB-14","img":"BB-14-定海浮生录","imgFull":"BB-14-定海浮生录-大图"},{"id":37,"cat":"驱魔师系列样板间","name":"清平梦华录","desc":"作者：非天夜翔 · 最新版本 v1","price":500,"max":1,"code":"BB-15","img":"BB-15-清平梦华录","imgFull":"BB-15-清平梦华录-大图"},{"id":38,"cat":"驱魔师系列样板间","name":"万物风华录","desc":"作者：非天夜翔 · 最新版本 v1","price":600,"max":1,"code":"BB-16","img":"BB-16-万物风华录","imgFull":"BB-16-万物风华录-大图"},{"id":39,"cat":"振华系列样板间","name":"振华系列 · 整套打包","desc":"包含本分类全部 4 本：你好，旧时光、暗恋 橘生淮南、最好的我们、这么多年。整套购买按打包价 ¥18（单买合计 ¥21）；只买其中几本，请单独选择每本，按单买价计算。","price":1800,"max":1,"code":"BG-01-04","img":"BG-01-04-振华系列_·_整套打包","imgFull":"BG-01-04-振华系列_·_整套打包-大图"},{"id":40,"cat":"振华系列样板间","name":"你好，旧时光","desc":"作者：八月长安 · 最新版本 v1.1","price":700,"max":1,"code":"BG-01","img":"BG-01-你好，旧时光","imgFull":"BG-01-你好，旧时光-大图"},{"id":41,"cat":"振华系列样板间","name":"暗恋 橘生淮南","desc":"作者：八月长安 · 最新版本 v1.1","price":500,"max":1,"code":"BG-02","img":"BG-02-暗恋_橘生淮南","imgFull":"BG-02-暗恋_橘生淮南-大图"},{"id":42,"cat":"振华系列样板间","name":"最好的我们","desc":"作者：八月长安 · 最新版本 v1.2","price":500,"max":1,"code":"BG-03","img":"BG-03-最好的我们","imgFull":"BG-03-最好的我们-大图"},{"id":43,"cat":"振华系列样板间","name":"这么多年","desc":"作者：八月长安 · 最新版本 v1.1","price":400,"max":1,"code":"BG-04","img":"BG-04-这么多年","imgFull":"BG-04-这么多年-大图"},{"id":125,"cat":"沧月系列样板间","name":"沧月系列 · 整套打包","desc":"作者：沧月 · 包含本分类全部 9 项：「镜」系列、「听雪楼」系列、「鼎剑阁」系列、「羽」系列、「武之魂」系列、花镜、风玫瑰、2012末夜、夜照燃星（共 29 本）。整套购买按打包价 ¥30（单买合计 ¥34）；只买其中几项，请单独选择，按单买价计算。","price":3000,"max":1,"bundle":true,"code":"BG-19-47"},{"id":116,"cat":"沧月系列样板间","name":"「镜」系列","desc":"作者：沧月 · 共 7 本：双城、破军、龙战、辟天、神寂、织梦者、朱颜。整套出售，不单卖。","price":600,"max":1,"bundle":true,"code":"BG-19-25","img":"BG-19-25-「镜」系列","imgFull":"BG-19-25-「镜」系列-大图","more":["BG-19-25-「镜」系列-大图-2","BG-19-25-「镜」系列-大图-3","BG-19-25-「镜」系列-大图-4","BG-19-25-「镜」系列-大图-5","BG-19-25-「镜」系列-大图-6","BG-19-25-「镜」系列-大图-7"]},{"id":117,"cat":"沧月系列样板间","name":"「听雪楼」系列","desc":"作者：沧月 · 共 7 本：血薇、护花铃、指间沙、神兵阁、火焰鸢尾、忘川、荒原雪。整套出售，不单卖。","price":600,"max":1,"bundle":true,"code":"BG-26-32"},{"id":118,"cat":"沧月系列样板间","name":"「鼎剑阁」系列","desc":"作者：沧月 · 共 4 本：七夜雪、大漠荒颜·帝都赋、幻世·剑歌·碧城、曼珠沙华·彼岸花。整套出售，不单卖。","price":500,"max":1,"bundle":true,"code":"BG-33-36","img":"BG-33-36-「鼎剑阁」系列","imgFull":"BG-33-36-「鼎剑阁」系列-大图","more":["BG-33-36-「鼎剑阁」系列-大图-2","BG-33-36-「鼎剑阁」系列-大图-3"]},{"id":119,"cat":"沧月系列样板间","name":"「羽」系列","desc":"作者：沧月 · 共 4 本：黯月之翼、苍穹之烬、赤炎之瞳、青空之蓝。整套出售，不单卖。","price":500,"max":1,"bundle":true,"code":"BG-37-40"},{"id":120,"cat":"沧月系列样板间","name":"「武之魂」系列","desc":"作者：沧月 · 共 3 本：星坠篇、沧海篇、夜船篇。整套出售，不单卖。","price":400,"max":1,"bundle":true,"code":"BG-41-43"},{"id":69,"cat":"沧月系列样板间","name":"花镜","desc":"作者：沧月 · 最新版本 v1","price":200,"max":1,"code":"BG-44"},{"id":70,"cat":"沧月系列样板间","name":"风玫瑰","desc":"作者：沧月 · 最新版本 v1","price":200,"max":1,"code":"BG-45"},{"id":71,"cat":"沧月系列样板间","name":"2012末夜","desc":"作者：沧月 · 最新版本 v1","price":200,"max":1,"code":"BG-46"},{"id":72,"cat":"沧月系列样板间","name":"夜照燃星","desc":"作者：沧月 · 最新版本 v1；实体书目前只出到第二部，包后续更新","price":200,"max":1,"code":"BG-47"},{"id":122,"cat":"顾漫系列样板间","name":"顾漫三部曲 · 整套打包","desc":"包含本分类全部 3 本：何以笙箫默、微微一笑很倾城、杉杉来吃。整套购买按打包价 ¥8（单买合计 ¥9）；只买其中几本，请单独选择每本，按单买价计算。","price":800,"max":1,"bundle":true,"code":"BG-48-50"},{"id":73,"cat":"顾漫系列样板间","name":"何以笙箫默","desc":"作者：顾漫 · 最新版本 v1","price":300,"max":1,"code":"BG-48"},{"id":74,"cat":"顾漫系列样板间","name":"微微一笑很倾城","desc":"作者：顾漫 · 最新版本 v1","price":300,"max":1,"code":"BG-49"},{"id":75,"cat":"顾漫系列样板间","name":"杉杉来吃","desc":"作者：顾漫 · 最新版本 v1","price":300,"max":1,"code":"BG-50"},{"id":102,"cat":"七宝酥系列样板间","name":"光鲜宅女","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-51"},{"id":103,"cat":"七宝酥系列样板间","name":"三梳","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-52"},{"id":104,"cat":"七宝酥系列样板间","name":"当我上门遛狗发现狗主人是大帅比后","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-53"},{"id":105,"cat":"七宝酥系列样板间","name":"当我在地铁上误连别人的手机蓝牙后","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-54"},{"id":106,"cat":"七宝酥系列样板间","name":"分开的意义","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-55"},{"id":107,"cat":"七宝酥系列样板间","name":"国王长着驴耳朵","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-56"},{"id":108,"cat":"七宝酥系列样板间","name":"今晚还听么","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-57"},{"id":109,"cat":"七宝酥系列样板间","name":"狙击蝴蝶","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-58"},{"id":110,"cat":"七宝酥系列样板间","name":"王者峡谷不需要我","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-59"},{"id":111,"cat":"七宝酥系列样板间","name":"小雪落在车顶上","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-60"},{"id":112,"cat":"七宝酥系列样板间","name":"许愿池的王八少女","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-61"},{"id":113,"cat":"七宝酥系列样板间","name":"呀！我心里有鬼","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-62"},{"id":114,"cat":"七宝酥系列样板间","name":"一整个宇宙换一颗青柠","desc":"作者：七宝酥","price":0,"max":1,"na":true,"code":"BG-63"},{"id":76,"cat":"BL单本样板间","name":"沉舟","desc":"作者：楚寒衣青 · 最新版本 v1.4","price":400,"max":1,"code":"BB-17","img":"BB-17-沉舟","imgFull":"BB-17-沉舟-大图"},{"id":77,"cat":"BL单本样板间","name":"我开动物园那些年","desc":"作者：拉棉花糖的兔子 · 最新版本 v1","price":300,"max":1,"code":"BB-18","img":"BB-18-我开动物园那些年","imgFull":"BB-18-我开动物园那些年-大图"},{"id":78,"cat":"BL单本样板间","name":"非职业半仙","desc":"作者：拉棉花糖的兔子 · 最新版本 v1","price":300,"max":1,"code":"BB-19","img":"BB-19-非职业半仙","imgFull":"BB-19-非职业半仙-大图"},{"id":79,"cat":"BL单本样板间","name":"下饭菜","desc":"作者：芥菜糊糊 · 最新版本 v1.1","price":300,"max":1,"code":"BB-20","img":"BB-20-下饭菜","imgFull":"BB-20-下饭菜-大图"},{"id":80,"cat":"BL单本样板间","name":"不要在垃圾桶里捡男朋友","desc":"作者：骑鲸南去 · 最新版本 v1.1","price":300,"max":1,"code":"BB-21","img":"BB-21-不要在垃圾桶里捡男朋友","imgFull":"BB-21-不要在垃圾桶里捡男朋友-大图"},{"id":81,"cat":"BL单本样板间","name":"魔道祖师","desc":"作者：墨香铜臭 · 最新版本 v1。仅适配Kindle。","price":800,"max":1,"code":"BB-22","img":"BB-22-魔道祖师","imgFull":"BB-22-魔道祖师-大图"},{"id":82,"cat":"BG单本样板间","name":"长安小饭馆","desc":"作者：樱桃糕 · 最新版本 v2.0","price":300,"max":1,"code":"BG-05","img":"BG-05-长安小饭馆","imgFull":"BG-05-长安小饭馆-大图"},{"id":83,"cat":"BG单本样板间","name":"在国子监开小卖部","desc":"作者：松雪酥 · 最新版本 v1.1","price":300,"max":1,"code":"BG-06","img":"BG-06-在国子监开小卖部","imgFull":"BG-06-在国子监开小卖部-大图"},{"id":84,"cat":"BG单本样板间","name":"许你万丈光芒好","desc":"作者：囧囧有妖 · 最新版本 v2.2","price":200,"max":1,"code":"BG-07","img":"BG-07-许你万丈光芒好","imgFull":"BG-07-许你万丈光芒好-大图"},{"id":85,"cat":"BG单本样板间","name":"十年一品温如言","desc":"作者：书海沧生 · 最新版本 v1.4","price":200,"max":1,"code":"BG-08","img":"BG-08-十年一品温如言","imgFull":"BG-08-十年一品温如言-大图"},{"id":86,"cat":"BG单本样板间","name":"末日降临18楼全员恶人","desc":"作者：程加加 · 最新版本 v1.6","price":200,"max":1,"code":"BG-09","img":"BG-09-末日降临18楼全员恶人","imgFull":"BG-09-末日降临18楼全员恶人-大图"},{"id":87,"cat":"BG单本样板间","name":"夏有乔木雅望天堂","desc":"作者：籽月 · 最新版本 v2.6","price":200,"max":1,"code":"BG-10","img":"BG-10-夏有乔木雅望天堂","imgFull":"BG-10-夏有乔木雅望天堂-大图"},{"id":88,"cat":"BG单本样板间","name":"下堂王妃","desc":"作者：迩七 · 最新版本 v1.0","price":200,"max":1,"code":"BG-11","img":"BG-11-下堂王妃","imgFull":"BG-11-下堂王妃-大图"},{"id":89,"cat":"BG单本样板间","name":"脱缰🥩","desc":"作者：鸣銮 · 最新版本 v1.2","price":200,"max":1,"code":"BG-12","img":"BG-12-脱缰🥩","imgFull":"BG-12-脱缰🥩-大图"},{"id":90,"cat":"BG单本样板间","name":"大英雄时代","desc":"作者：priest · 最新版本 v1.0","price":200,"max":1,"code":"BG-13","img":"BG-13-大英雄时代","imgFull":"BG-13-大英雄时代-大图"},{"id":91,"cat":"BG单本样板间","name":"咸山骨祠","desc":"作者：子琼 · 最新版本 v1","price":200,"max":1,"code":"BG-14","img":"BG-14-咸山骨祠","imgFull":"BG-14-咸山骨祠-大图"},{"id":92,"cat":"BG单本样板间","name":"不可名状的城镇","desc":"作者：子琼 · 最新版本 v1.4","price":200,"max":1,"code":"BG-15","img":"BG-15-不可名状的城镇","imgFull":"BG-15-不可名状的城镇-大图"},{"id":93,"cat":"BG单本样板间","name":"深空降临","desc":"作者：子琼 · 最新版本 v1","price":200,"max":1,"code":"BG-16","img":"BG-16-深空降临","imgFull":"BG-16-深空降临-大图"},{"id":94,"cat":"BG单本样板间","name":"天堂玫瑰🥩","desc":"作者：美人乔 · 最新版本 v1.1","price":200,"max":1,"code":"BG-17","img":"BG-17-天堂玫瑰🥩","imgFull":"BG-17-天堂玫瑰🥩-大图"},{"id":95,"cat":"BG单本样板间","name":"If I never met you","desc":"作者：Mhairi McFarlane · 最新版本 v1；北美晋江，AI 翻译","price":100,"max":1,"code":"BG-18","img":"BG-18-If_I_never_met_you","imgFull":"BG-18-If_I_never_met_you-大图"},{"id":124,"cat":"BG单本样板间","name":"我和黑粉结婚了","desc":"作者：安知晓","price":0,"max":1,"na":true,"code":"BG-64"},{"id":96,"cat":"GB单本样板间","name":"白日烟花","desc":"作者：双手揣兜 · 最新版本 v1.1","price":200,"max":1,"code":"GB-01","img":"GB-01-白日烟花","imgFull":"GB-01-白日烟花-大图"},{"id":97,"cat":"GB单本样板间","name":"声控漫画家","desc":"作者：清月见 · 最新版本 v1.0","price":200,"max":1,"code":"GB-02","img":"GB-02-声控漫画家","imgFull":"GB-02-声控漫画家-大图"},{"id":98,"cat":"GL单本样板间","name":"我亲爱的法医小姐","desc":"作者：酒暖春深 · 最新版本 v1.3；包含有漫画插图版和无漫画插图版","price":500,"max":1,"code":"GG-01","img":"GG-01-我亲爱的法医小姐","imgFull":"GG-01-我亲爱的法医小姐-大图"},{"id":99,"cat":"GL单本样板间","name":"影后成双","desc":"作者：玄笺 · 最新版本 v1.6","price":200,"max":1,"code":"GG-02","img":"GG-02-影后成双","imgFull":"GG-02-影后成双-大图"},{"id":100,"cat":"GL单本样板间","name":"希望你真的很快乐","desc":"作者：七小皇叔 · 最新版本 v1.0","price":300,"max":1,"code":"GG-03","img":"GG-03-希望你真的很快乐","imgFull":"GG-03-希望你真的很快乐-大图"},{"id":101,"cat":"无CP单本样板间","name":"四栋十三号公寓","desc":"作者：小虎鲨 · 最新版本 v1","price":300,"max":1,"code":"NCP-01","img":"NCP-01-四栋十三号公寓","imgFull":"NCP-01-四栋十三号公寓-大图"},{"id":115,"cat":"严肃文学样板间","name":"多欲之年","desc":"作者：权延赤","price":200,"max":1,"code":"LIT-02","giftOnly":true,"img":"LIT-02-多欲之年","imgFull":"LIT-02-多欲之年-大图"},{"id":121,"cat":"同人文样板间","name":"王道文","desc":"共14本：BL13本&BG1本。仅适配Kindle","price":1000,"max":1,"code":"TR-01","img":"TR-01-王道文","imgFull":"TR-01-王道文-大图","more":["TR-01-王道文-大图-2","TR-01-王道文-大图-3"]}],"promo":{"mjOn":false,"mjOver":10000,"mjOff":1000,"mjStack":false,"mzOn":false,"mzOver":1800,"mz":9,"zkOn":false,"zk":9,"gift":{"on":true,"step":1000,"cheapMax":200,"endDate":"2026-11-15"}},"cats":["严肃文学样板间","悬疑小说样板间","实案记录样板间","社会科学样板间","经济管理样板间","儿童文学样板间","188样板间","驱魔师系列样板间","振华系列样板间","沧月系列样板间","顾漫系列样板间","七宝酥系列样板间","BL单本样板间","BG单本样板间","GB单本样板间","GL单本样板间","无CP单本样板间","同人文样板间"],"pay":{"qrWechat":"img/qr-wechat-dc7ce113.webp","qrAlipay":"img/qr-alipay-edd2bad8.webp","qqOn":true,"qqNo":"3641246118"},"foldCats":["严肃文学样板间","悬疑小说样板间","实案记录样板间","社会科学样板间","经济管理样板间","儿童文学样板间","188样板间","驱魔师系列样板间","振华系列样板间","沧月系列样板间","顾漫系列样板间","BL单本样板间","BG单本样板间","GB单本样板间","GL单本样板间","无CP单本样板间","七宝酥系列样板间","同人文样板间"],"catCodes":{"严肃文学样板间":"LIT","悬疑小说样板间":"SUS","实案记录样板间":"RC","社会科学样板间":"SD","经济管理样板间":"ECO","儿童文学样板间":"KID","188样板间":"BB","驱魔师系列样板间":"BB","振华系列样板间":"BG","沧月系列样板间":"BG","顾漫系列样板间":"BG","BL单本样板间":"BB","BG单本样板间":"BG","GB单本样板间":"GB","GL单本样板间":"GG","无CP单本样板间":"NCP","七宝酥系列样板间":"BG","同人文样板间":"TR"},"imgDir":"img/"}</script>
 <script id="page-script">
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -586,7 +972,7 @@ button, input, textarea { font: inherit; color: inherit; }
     const hit = (g) => { if (!words.length) return true; const hay = [g.name, g.code, g.desc, g.cat, (draft.catCodes || {})[g.cat]].join(" ").toLowerCase(); return words.every((w) => hay.includes(w)); };
     let found = 0;
     draft.cats.forEach((c) => {
-      const list = goodsIn(c).filter((g) => !g.giftOnly).filter(hit);
+      const list = goodsIn(c).filter(hit);
       if (!list.length) return;
       found += list.length;
       const sec = document.createElement("details");
@@ -713,10 +1099,11 @@ button, input, textarea { font: inherit; color: inherit; }
     else if (lbList.length > 1 && e.key === "ArrowLeft") showPic(lbIdx - 1);
   });
   function ticket(g) {
-    if (g.na) {
+    if (g.na || g.giftOnly) {
       const c = document.createElement("article");
-      c.className = "ticket na";
-      c.innerHTML = '<div class="no"><span class="id"></span><span class="cat"></span></div><div class="name"></div><div class="desc"></div><hr class="tear"><div class="bottom"><span class="na-tag">暂不出售</span></div>';
+      c.className = "ticket na" + (g.na ? "" : " gonly");
+      c.innerHTML = '<div class="no"><span class="id"></span><span class="cat"></span></div><div class="name"></div><div class="desc"></div><hr class="tear"><div class="bottom"><span class="na-tag"></span></div>';
+      c.querySelector(".na-tag").textContent = g.na ? "暂不出售" : "不出售 · 仅作赠品";
       c.querySelector(".id").textContent = g.code || "No." + String(g.id).padStart(3, "0");
       c.querySelector(".cat").textContent = g.cat;
       c.querySelector(".name").textContent = g.name;

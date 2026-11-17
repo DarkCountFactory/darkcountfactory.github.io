@@ -1556,6 +1556,7 @@ button, input, textarea { font: inherit; color: inherit; }
     try {
       if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
         clip = navigator.clipboard.write([new ClipboardItem({ "image/png": blobP })]).then(() => { copied = true; });
+        clip.catch(() => {}); // 复制失败（比如微信里）不报错，下面会改为显示图片让顾客长按保存
       }
     } catch (e) { clip = null; }
     blobP.then((b) => show(b).then(() => true, () => false)).then((shown) => {
